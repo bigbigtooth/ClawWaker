@@ -10,7 +10,7 @@
 
 [**English**](./README_EN.md) · [简体中文](./README.md)
 
-<img src="./screenshot1_en.png" alt="ClawWaker Screenshot" width="80%" />
+<img src="./pic/screenshot1_en.png" alt="ClawWaker Screenshot" width="80%" />
 
 </div>
 
