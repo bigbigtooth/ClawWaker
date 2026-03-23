@@ -1,13 +1,13 @@
 <div align="center">
 
-<img src="./cw_logo.png" alt="ClawWaker Logo" width="128" />
+<img src="./pic/cw_logo.png" alt="ClawWaker Logo" width="128" />
 
 # ClawWaker
 
 **Auto-manage OpenClaw when you step away from your Mac**
 
 [![macOS](https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/bigbigtooth/ClawWaker)
-[![Version](https://img.shields.io/badge/version-0.1.1-blue?style=flat-square)](https://github.com/bigbigtooth/ClawWaker)
+[![Version](https://img.shields.io/badge/version-0.1.2-blue?style=flat-square)](https://github.com/bigbigtooth/ClawWaker)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 
 [**English**](./README_EN.md) · [简体中文](./README.md)
@@ -76,7 +76,7 @@ Any one triggers stop:
 
 ## Project Info
 
-- **Version**: 0.1.1
+- **Version**: 0.1.2
 - **Platform**: macOS
 - **Repository**: [github.com/bigbigtooth/ClawWaker](https://github.com/bigbigtooth/ClawWaker)
 
