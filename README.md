@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="./cw_logo.png" alt="ClawWaker Logo" width="128" />
+
 # ClawWaker
 
 **离开工位，自动启动 OpenClaw**

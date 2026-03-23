@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="./cw_logo.png" alt="ClawWaker Logo" width="128" />
+
 # ClawWaker
 
 **Auto-manage OpenClaw when you step away from your Mac**
