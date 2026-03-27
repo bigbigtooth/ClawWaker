@@ -28,7 +28,7 @@ struct ClawWakerApp: App {
                 .environmentObject(appModel)
         }
 
-        MenuBarExtra("ClawWaker", image: "MenuBarIcon") {
+        MenuBarExtra("ClawWaker", image: appModel.serviceController.isRunning ? "MenuBarIconOpen" : "MenuBarIconClose") {
             MenuBarContentView(serviceController: appModel.serviceController) {
                 openDashboard()
             }

@@ -886,7 +886,8 @@ private func localizedErrorText(_ error: Error) -> LocalizedText {
 
 private enum ProcessInspector {
     private static let knownExecutableBasenames: Set<String> = [
-        "openclaw"
+        "openclaw",
+        "openclaw-gateway"
     ]
 
     static func matchingProcesses(configuration: OpenClawConfiguration) throws -> [RunningProcessSnapshot] {

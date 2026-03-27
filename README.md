@@ -7,7 +7,7 @@
 **离开工位，自动启动 OpenClaw**
 
 [![macOS](https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/bigbigtooth/ClawWaker)
-[![Version](https://img.shields.io/badge/version-0.1.2-blue?style=flat-square)](https://github.com/bigbigtooth/ClawWaker)
+[![Version](https://img.shields.io/badge/version-1.0.3-blue?style=flat-square)](https://github.com/bigbigtooth/ClawWaker)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 
 [English](./README_EN.md) · **简体中文**
@@ -62,7 +62,7 @@
 
 ### 项目信息
 
-- **版本**：0.1.2
+- **版本**：1.0.3
 - **平台**：macOS
 - **仓库**：[github.com/bigbigtooth/ClawWaker](https://github.com/bigbigtooth/ClawWaker)
 
