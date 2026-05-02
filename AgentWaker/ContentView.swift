@@ -1096,7 +1096,7 @@ private struct SleepGuidanceView: View {
             Text(t("关闭关屏休眠设置指引", "Display Sleep Guidance"))
                 .font(.system(size: 28, weight: .bold, design: .rounded))
 
-            Text(t("为了让空动在屏幕熄灭后尽量保持服务可达，请按下面步骤检查 macOS 设置：", "To help AgentWaker keep the service reachable after the display turns off, review these macOS settings:"))
+            Text(t("为了让Agent闹钟在屏幕熄灭后尽量保持服务可达，请按下面步骤检查 macOS 设置：", "To help AgentWaker keep the service reachable after the display turns off, review these macOS settings:"))
                 .font(.title3)
                 .foregroundStyle(.secondary)
 
@@ -1109,7 +1109,7 @@ private struct SleepGuidanceView: View {
 
             InfoCallout(
                 title: t("提示", "Tip"),
-                message: t("空动能阻止空闲休眠，但不能保证所有机型在合盖后依然持续联网。", "AgentWaker can prevent idle sleep, but it cannot guarantee continuous network availability on every Mac after the lid is closed."),
+                message: t("Agent闹钟能阻止空闲休眠，但不能保证所有机型在合盖后依然持续联网。", "AgentWaker can prevent idle sleep, but it cannot guarantee continuous network availability on every Mac after the lid is closed."),
                 tint: .orange
             )
 

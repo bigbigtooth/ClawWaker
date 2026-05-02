@@ -17,12 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `start_openclaw.sh` / `stop_openclaw.sh`
   - `start_hermes.sh` / `stop_hermes.sh`
 - **opcdesk-inspired design tokens** — Stone blue (#2A5F8A) accent, cinnabar red (#9E2A2B) for stop/error, teal green (#2E8B57) for running state
-- **Chinese app name** — "空动" displayed in Chinese locale, "AgentWaker" in English locale
+- **Chinese app name** — "Agent闹钟" displayed in Chinese locale, "AgentWaker" in English locale
 - **Unit tests** — 36 test cases covering ServiceConfiguration, ServicePreset, ShellScriptResolver, ProcessInspector, and LocalizedText
 
 ### Changed
 
-- **Project renamed** from ClawWaker to AgentWaker (English) / 空动 (Chinese)
+- **Project renamed** from ClawWaker to AgentWaker (English) / Agent闹钟 (Chinese)
 - **Bundle identifier** changed from `bigtooth.ClawWaker` to `bigtooth.AgentWaker`
 - **Process detection** switched from `pgrep -x` (exact match) to `pgrep -f` (full command line match) to properly detect interpreted scripts (Python/Node)
 - **Preset switching** now resets all configuration fields (executable, arguments, stop mode, etc.) to appropriate defaults
@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `OpenClawServiceController` → `AgentServiceController`
 - `ClawWakerAppModel` → `AgentWakerAppModel`
 - `ClawWakerApp` → `AgentWakerApp`
-- All hardcoded "ClawWaker" references replaced with "空动" (zh) / "AgentWaker" (en)
+- All hardcoded "ClawWaker" references replaced with "Agent闹钟" (zh) / "AgentWaker" (en)
 - Source directory renamed from `ClawWaker/` to `AgentWaker/`
 - Xcode project renamed from `ClawWaker.xcodeproj` to `AgentWaker.xcodeproj`
 - Version bumped from 1.1.0 to 1.2.0
@@ -57,18 +57,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `start_hermes.sh` / `stop_hermes.sh`
 - **opcdesk-inspired design tokens** — Stone blue (#2A5F8A) accent, cinnabar red (#9E2A2B) for stop/error, teal green (#2E8B57) for running state
 - **Dynamic service name** — All UI text updates dynamically based on selected preset (OpenClaw, Hermes, or custom)
-- **Chinese app name** — "空动" displayed in Chinese locale, "AgentWaker" in English locale
+- **Chinese app name** — "Agent闹钟" displayed in Chinese locale, "AgentWaker" in English locale
 - **Preset picker in Settings** — Segmented control for OpenClaw / Hermes / Custom with locked fields for built-in presets
 
 ### Changed
 
-- **Project renamed** from ClawWaker to AgentWaker (English) / 空动 (Chinese)
+- **Project renamed** from ClawWaker to AgentWaker (English) / Agent闹钟 (Chinese)
 - **Bundle identifier** changed from `bigtooth.ClawWaker` to `bigtooth.AgentWaker`
 - **Product name** changed from ClawWaker to AgentWaker
 - **Logger subsystem** changed from `bigtooth.ClawWaker` to `bigtooth.AgentWaker`
 - **Log directory** changed from `~/Library/Logs/ClawWaker/` to `~/Library/Logs/AgentWaker/`
 - All hardcoded "OpenClaw" UI strings replaced with dynamic service names
-- All hardcoded "ClawWaker" references replaced with "空动" (zh) / "AgentWaker" (en)
+- All hardcoded "ClawWaker" references replaced with "Agent闹钟" (zh) / "AgentWaker" (en)
 - `OpenClawConfiguration` → `ServiceConfiguration` with preset support
 - `OpenClawServiceController` → `AgentServiceController`
 - `OpenClawConfigurationError` → `ServiceConfigurationError`
@@ -76,7 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ClawWakerApp` → `AgentWakerApp`
 - `ClawWakerAppDelegate` → `AgentWakerAppDelegate`
 - App window title changed from "ClawWaker" to "AgentWaker"
-- Menu bar quit text changed from "Quit ClawWaker" to "Quit AgentWaker" / "退出空动"
+- Menu bar quit text changed from "Quit ClawWaker" to "Quit AgentWaker" / "退出Agent闹钟"
 - Source directory renamed from `ClawWaker/` to `AgentWaker/`
 - Xcode project renamed from `ClawWaker.xcodeproj` to `AgentWaker.xcodeproj`
 - Version bumped from 1.0.3 to 1.1.0

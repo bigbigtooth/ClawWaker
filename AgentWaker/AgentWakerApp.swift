@@ -61,7 +61,7 @@ final class AgentWakerAppDelegate: NSObject, NSApplicationDelegate {
         NSApplication.shared.activate(ignoringOtherApps: false)
         appModel?.runtimeLogStore.record(
             category: LT("应用", "App"),
-            LT("空动启动完成；即使关闭所有窗口，后台自动策略仍会继续运行。", "AgentWaker launch completed. Even if all windows close, the background automation policy will keep running.")
+            LT("Agent闹钟启动完成；即使关闭所有窗口，后台自动策略仍会继续运行。", "AgentWaker launch completed. Even if all windows close, the background automation policy will keep running.")
         )
     }
 
@@ -153,7 +153,7 @@ private struct MenuBarContentView: View {
 
             Divider()
 
-            menuActionButton(title: t("退出空动", "Quit AgentWaker"), systemImage: "power") {
+            menuActionButton(title: t("退出Agent闹钟", "Quit AgentWaker"), systemImage: "power") {
                 NSApplication.shared.terminate(nil)
             }
         }

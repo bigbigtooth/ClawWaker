@@ -1046,7 +1046,7 @@ final class AgentServiceController: ObservableObject {
                 launchDetectionDeadline = nil
                 logStore.record(
                     category: serviceLogCategory,
-                    LT("检测到 \(serviceName.zh) 进程，已标记为由空动\(pendingSource.label.zh)启动。", "Detected a \(serviceName.en) process and marked it as started by AgentWaker (\(pendingSource.label.en)).")
+                    LT("检测到 \(serviceName.zh) 进程，已标记为由Agent闹钟\(pendingSource.label.zh)启动。", "Detected a \(serviceName.en) process and marked it as started by AgentWaker (\(pendingSource.label.en)).")
                 )
             }
             lastErrorMessage = nil
@@ -1608,7 +1608,7 @@ final class AgentWakerAppModel: ObservableObject {
             }
             .store(in: &cancellables)
 
-        runtimeLogStore.record(category: automationLogCategory, LT("空动已启动，开始监听系统状态。", "AgentWaker started and is now monitoring system state."))
+        runtimeLogStore.record(category: automationLogCategory, LT("Agent闹钟已启动，开始监听系统状态。", "AgentWaker started and is now monitoring system state."))
         refreshAll()
     }
 
@@ -1687,7 +1687,7 @@ final class AgentWakerAppModel: ObservableObject {
         let isEligible = automationEligible
         let serviceName = configuration.activeServiceName
         if snapshot.isLidClosed {
-            wakeLimitationNote = LT("检测到合盖；空动能继续申请防休眠断言，但 macOS 公开接口无法保证合盖后仍保持联网唤醒。", "The lid appears closed. AgentWaker will keep requesting a wake assertion, but public macOS APIs cannot guarantee network wakefulness after the lid is closed.")
+            wakeLimitationNote = LT("检测到合盖；Agent闹钟能继续申请防休眠断言，但 macOS 公开接口无法保证合盖后仍保持联网唤醒。", "The lid appears closed. AgentWaker will keep requesting a wake assertion, but public macOS APIs cannot guarantee network wakefulness after the lid is closed.")
         } else {
             wakeLimitationNote = LT("已支持显示器黑屏时阻止空闲休眠；如果合上屏幕，系统仍可能因为硬件策略进入睡眠。", "Idle sleep prevention works while the display is dark, but the system may still sleep because of hardware policy when the lid is closed.")
         }
@@ -1719,8 +1719,8 @@ final class AgentWakerAppModel: ObservableObject {
             && serviceController.managedStartSource == .automatic
             && !autoStopIssuedUntilReset {
             autoStopIssuedUntilReset = true
-            automationMessage = LT("自动停止条件触发，正在关闭由空动启动的 \(serviceName.zh)。", "Auto-stop conditions were triggered. Stopping the \(serviceName.en) instance started by AgentWaker.")
-            runtimeLogStore.record(category: automationLogCategory, LT("检测到自动条件被破坏，准备停止由空动自动启动的 \(serviceName.zh)。", "Automatic conditions were broken. Preparing to stop the \(serviceName.en) instance started automatically by AgentWaker."))
+            automationMessage = LT("自动停止条件触发，正在关闭由Agent闹钟启动的 \(serviceName.zh)。", "Auto-stop conditions were triggered. Stopping the \(serviceName.en) instance started by AgentWaker.")
+            runtimeLogStore.record(category: automationLogCategory, LT("检测到自动条件被破坏，准备停止由Agent闹钟自动启动的 \(serviceName.zh)。", "Automatic conditions were broken. Preparing to stop the \(serviceName.en) instance started automatically by AgentWaker."))
             serviceController.stop(configuration: configuration, source: .automatic)
             return
         }
