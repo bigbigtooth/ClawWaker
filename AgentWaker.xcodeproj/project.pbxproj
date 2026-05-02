@@ -6,14 +6,30 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		TEST0030002F6E3F820044FB21 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4A86D9202F6E3F820044FB21 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4A86D9272F6E3F820044FB21;
+			remoteInfo = AgentWaker;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
-		4A86D9282F6E3F820044FB21 /* ClawWaker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClawWaker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4A86D9282F6E3F820044FB21 /* AgentWaker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AgentWaker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		TEST0040002F6E3F820044FB21 /* AgentWakerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AgentWakerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		4A86D92A2F6E3F820044FB21 /* ClawWaker */ = {
+		4A86D92A2F6E3F820044FB21 /* AgentWaker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ClawWaker;
+			path = AgentWaker;
+			sourceTree = "<group>";
+		};
+		TEST0050002F6E3F820044FB21 /* AgentWakerTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AgentWakerTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -26,13 +42,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		TEST0060002F6E3F820044FB21 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		4A86D91F2F6E3F820044FB21 = {
 			isa = PBXGroup;
 			children = (
-				4A86D92A2F6E3F820044FB21 /* ClawWaker */,
+				4A86D92A2F6E3F820044FB21 /* AgentWaker */,
+				TEST0050002F6E3F820044FB21 /* AgentWakerTests */,
 				4A86D9292F6E3F820044FB21 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,7 +64,8 @@
 		4A86D9292F6E3F820044FB21 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4A86D9282F6E3F820044FB21 /* ClawWaker.app */,
+				4A86D9282F6E3F820044FB21 /* AgentWaker.app */,
+				TEST0040002F6E3F820044FB21 /* AgentWakerTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,9 +73,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		4A86D9272F6E3F820044FB21 /* ClawWaker */ = {
+		4A86D9272F6E3F820044FB21 /* AgentWaker */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4A86D9332F6E3F830044FB21 /* Build configuration list for PBXNativeTarget "ClawWaker" */;
+			buildConfigurationList = 4A86D9332F6E3F830044FB21 /* Build configuration list for PBXNativeTarget "AgentWaker" */;
 			buildPhases = (
 				4A86D9242F6E3F820044FB21 /* Sources */,
 				4A86D9252F6E3F820044FB21 /* Frameworks */,
@@ -61,14 +86,37 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				4A86D92A2F6E3F820044FB21 /* ClawWaker */,
+				4A86D92A2F6E3F820044FB21 /* AgentWaker */,
 			);
-			name = ClawWaker;
+			name = AgentWaker;
 			packageProductDependencies = (
 			);
-			productName = ClawWaker;
-			productReference = 4A86D9282F6E3F820044FB21 /* ClawWaker.app */;
+			productName = AgentWaker;
+			productReference = 4A86D9282F6E3F820044FB21 /* AgentWaker.app */;
 			productType = "com.apple.product-type.application";
+		};
+		TEST0070002F6E3F820044FB21 /* AgentWakerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = TEST0130002F6E3F830044FB21 /* Build configuration list for PBXNativeTarget "AgentWakerTests" */;
+			buildPhases = (
+				TEST0080002F6E3F820044FB21 /* Sources */,
+				TEST0060002F6E3F820044FB21 /* Frameworks */,
+				TEST0090002F6E3F820044FB21 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				TEST0020002F6E3F820044FB21 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				TEST0050002F6E3F820044FB21 /* AgentWakerTests */,
+			);
+			name = AgentWakerTests;
+			packageProductDependencies = (
+			);
+			productName = AgentWakerTests;
+			productReference = TEST0040002F6E3F820044FB21 /* AgentWakerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -83,9 +131,13 @@
 					4A86D9272F6E3F820044FB21 = {
 						CreatedOnToolsVersion = 26.3;
 					};
+					TEST0070002F6E3F820044FB21 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 4A86D9272F6E3F820044FB21;
+					};
 				};
 			};
-			buildConfigurationList = 4A86D9232F6E3F820044FB21 /* Build configuration list for PBXProject "ClawWaker" */;
+			buildConfigurationList = 4A86D9232F6E3F820044FB21 /* Build configuration list for PBXProject "AgentWaker" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -99,13 +151,21 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				4A86D9272F6E3F820044FB21 /* ClawWaker */,
+				4A86D9272F6E3F820044FB21 /* AgentWaker */,
+				TEST0070002F6E3F820044FB21 /* AgentWakerTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		4A86D9262F6E3F820044FB21 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		TEST0090002F6E3F820044FB21 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +182,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		TEST0080002F6E3F820044FB21 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		TEST0020002F6E3F820044FB21 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4A86D9272F6E3F820044FB21 /* AgentWaker */;
+			targetProxy = TEST0030002F6E3F820044FB21 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		4A86D9312F6E3F830044FB21 /* Debug */ = {
@@ -261,9 +336,9 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0.3;
-				PRODUCT_BUNDLE_IDENTIFIER = bigtooth.ClawWaker;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				MARKETING_VERSION = 1.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = bigtooth.AgentWaker;
+				PRODUCT_NAME = AgentWaker;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -292,9 +367,9 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
-				MARKETING_VERSION = 1.0.3;
-				PRODUCT_BUNDLE_IDENTIFIER = bigtooth.ClawWaker;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				MARKETING_VERSION = 1.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = bigtooth.AgentWaker;
+				PRODUCT_NAME = AgentWaker;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -305,10 +380,52 @@
 			};
 			name = Release;
 		};
+		TEST0100002F6E3F830044FB21 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				ENABLE_TESTABILITY = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = bigtooth.AgentWakerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AgentWaker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AgentWaker";
+			};
+			name = Debug;
+		};
+		TEST0110002F6E3F830044FB21 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEPLOYMENT_POSTPROCESSING = NO;
+				ENABLE_TESTABILITY = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = bigtooth.AgentWakerTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AgentWaker.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AgentWaker";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4A86D9232F6E3F820044FB21 /* Build configuration list for PBXProject "ClawWaker" */ = {
+		4A86D9232F6E3F820044FB21 /* Build configuration list for PBXProject "AgentWaker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4A86D9312F6E3F830044FB21 /* Debug */,
@@ -317,11 +434,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4A86D9332F6E3F830044FB21 /* Build configuration list for PBXNativeTarget "ClawWaker" */ = {
+		4A86D9332F6E3F830044FB21 /* Build configuration list for PBXNativeTarget "AgentWaker" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4A86D9342F6E3F830044FB21 /* Debug */,
 				4A86D9352F6E3F830044FB21 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		TEST0130002F6E3F830044FB21 /* Build configuration list for PBXNativeTarget "AgentWakerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				TEST0100002F6E3F830044FB21 /* Debug */,
+				TEST0110002F6E3F830044FB21 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

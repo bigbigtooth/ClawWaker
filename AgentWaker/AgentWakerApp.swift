@@ -4,20 +4,20 @@ import SwiftUI
 private let dashboardStartupSize = NSSize(width: 1344, height: 820)
 
 @main
-struct ClawWakerApp: App {
-    @NSApplicationDelegateAdaptor(ClawWakerAppDelegate.self) private var appDelegate
-    @StateObject private var appModel: ClawWakerAppModel
+struct AgentWakerApp: App {
+    @NSApplicationDelegateAdaptor(AgentWakerAppDelegate.self) private var appDelegate
+    @StateObject private var appModel: AgentWakerAppModel
     private let dashboardWindowController: DashboardWindowController
 
     init() {
-        let model = ClawWakerAppModel()
+        let model = AgentWakerAppModel()
         _appModel = StateObject(wrappedValue: model)
         dashboardWindowController = DashboardWindowController(appModel: model)
         appDelegate.appModel = model
     }
 
     var body: some Scene {
-        WindowGroup("ClawWaker") {
+        WindowGroup("AgentWaker") {
             ContentView()
                 .environmentObject(appModel)
         }
@@ -28,7 +28,7 @@ struct ClawWakerApp: App {
                 .environmentObject(appModel)
         }
 
-        MenuBarExtra("ClawWaker", image: appModel.serviceController.isRunning ? "MenuBarIconOpen" : "MenuBarIconClose") {
+        MenuBarExtra("AgentWaker", image: appModel.serviceController.isRunning ? "MenuBarIconOpen" : "MenuBarIconClose") {
             MenuBarContentView(serviceController: appModel.serviceController) {
                 openDashboard()
             }
@@ -40,7 +40,7 @@ struct ClawWakerApp: App {
     private func openDashboard() {
         NSApplication.shared.activate(ignoringOtherApps: true)
 
-        if let existingWindow = NSApplication.shared.windows.first(where: { $0.title == "ClawWaker" }) {
+        if let existingWindow = NSApplication.shared.windows.first(where: { $0.title == "AgentWaker" }) {
             existingWindow.makeKeyAndOrderFront(nil)
             return
         }
@@ -49,8 +49,8 @@ struct ClawWakerApp: App {
     }
 }
 
-final class ClawWakerAppDelegate: NSObject, NSApplicationDelegate {
-    weak var appModel: ClawWakerAppModel?
+final class AgentWakerAppDelegate: NSObject, NSApplicationDelegate {
+    weak var appModel: AgentWakerAppModel?
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         false
@@ -61,7 +61,7 @@ final class ClawWakerAppDelegate: NSObject, NSApplicationDelegate {
         NSApplication.shared.activate(ignoringOtherApps: false)
         appModel?.runtimeLogStore.record(
             category: LT("应用", "App"),
-            LT("应用启动完成；即使关闭所有窗口，后台自动策略仍会继续运行。", "App launch completed. Even if all windows close, the background automation policy will keep running.")
+            LT("空动启动完成；即使关闭所有窗口，后台自动策略仍会继续运行。", "AgentWaker launch completed. Even if all windows close, the background automation policy will keep running.")
         )
     }
 
@@ -74,8 +74,8 @@ final class ClawWakerAppDelegate: NSObject, NSApplicationDelegate {
 
 private struct MenuBarContentView: View {
     @Environment(\.openSettings) private var openSettings
-    @EnvironmentObject private var appModel: ClawWakerAppModel
-    @ObservedObject var serviceController: OpenClawServiceController
+    @EnvironmentObject private var appModel: AgentWakerAppModel
+    @ObservedObject var serviceController: AgentServiceController
     let openDashboard: () -> Void
 
     private func t(_ zh: String, _ en: String) -> String {
@@ -86,11 +86,15 @@ private struct MenuBarContentView: View {
         appModel.text(localizedText)
     }
 
+    private var serviceName: LocalizedText {
+        appModel.activeServiceName
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("OpenClaw")
+                    Text(text(serviceName))
                         .font(.system(size: 17, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
                     Text(t("服务状态", "Service Status"))
@@ -121,7 +125,7 @@ private struct MenuBarContentView: View {
             Divider()
 
             menuActionButton(
-                title: serviceController.isRunning ? t("停止 OpenClaw", "Stop OpenClaw") : t("启动 OpenClaw", "Start OpenClaw"),
+                title: serviceController.isRunning ? t("停止 \(serviceName.zh)", "Stop \(serviceName.en)") : t("启动 \(serviceName.zh)", "Start \(serviceName.en)"),
                 systemImage: serviceController.isRunning ? "stop.fill" : "play.fill"
             ) {
                 if serviceController.isRunning {
@@ -149,7 +153,7 @@ private struct MenuBarContentView: View {
 
             Divider()
 
-            menuActionButton(title: t("退出 ClawWaker", "Quit ClawWaker"), systemImage: "power") {
+            menuActionButton(title: t("退出空动", "Quit AgentWaker"), systemImage: "power") {
                 NSApplication.shared.terminate(nil)
             }
         }
@@ -203,10 +207,10 @@ private struct MenuBarContentView: View {
 
 @MainActor
 private final class DashboardWindowController {
-    private let appModel: ClawWakerAppModel
+    private let appModel: AgentWakerAppModel
     private var window: NSWindow?
 
-    init(appModel: ClawWakerAppModel) {
+    init(appModel: AgentWakerAppModel) {
         self.appModel = appModel
     }
 
@@ -221,7 +225,7 @@ private final class DashboardWindowController {
             .environmentObject(appModel)
         let hostingController = NSHostingController(rootView: rootView)
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "ClawWaker"
+        window.title = "AgentWaker"
         window.setContentSize(dashboardStartupSize)
         window.minSize = NSSize(width: 1040, height: 760)
         window.center()

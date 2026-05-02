@@ -86,40 +86,164 @@ func LT(_ zh: String, _ en: String) -> LocalizedText {
     LocalizedText(zh: zh, en: en)
 }
 
-struct OpenClawConfiguration: Equatable, Sendable {
+enum ServicePreset: String, CaseIterable, Identifiable, Sendable {
+    case openclaw
+    case hermes
+    case custom
+
+    var id: String { rawValue }
+
+    var displayName: LocalizedText {
+        switch self {
+        case .openclaw: return LT("OpenClaw", "OpenClaw")
+        case .hermes:   return LT("Hermes", "Hermes")
+        case .custom:    return LT("自定义", "Custom")
+        }
+    }
+
+    var processNames: Set<String> {
+        switch self {
+        case .openclaw: return ["openclaw"]
+        case .hermes:   return ["hermes"]
+        case .custom:   return []
+        }
+    }
+
+    var startScriptName: String {
+        switch self {
+        case .openclaw: return "start_openclaw.sh"
+        case .hermes:   return "start_hermes.sh"
+        case .custom:   return ""
+        }
+    }
+
+    var stopScriptName: String {
+        switch self {
+        case .openclaw: return "stop_openclaw.sh"
+        case .hermes:   return "stop_hermes.sh"
+        case .custom:   return ""
+        }
+    }
+
+    var defaultExecutable: String {
+        switch self {
+        case .openclaw: return "openclaw"
+        case .hermes:   return "hermes"
+        case .custom:   return ""
+        }
+    }
+
+    var defaultStopExecutable: String {
+        switch self {
+        case .openclaw: return "openclaw"
+        case .hermes:   return "hermes"
+        case .custom:   return ""
+        }
+    }
+
+    var defaultStopMode: StopMode {
+        switch self {
+        case .openclaw: return .command
+        case .hermes:   return .command
+        case .custom:   return .command
+        }
+    }
+
+    var defaultArguments: String {
+        switch self {
+        case .openclaw: return ""
+        case .hermes:   return "gateway run"
+        case .custom:   return ""
+        }
+    }
+
+    var defaultStopArguments: String {
+        switch self {
+        case .openclaw: return "gateway stop"
+        case .hermes:   return "gateway stop"
+        case .custom:   return ""
+        }
+    }
+}
+
+struct ServiceConfiguration: Equatable, Sendable {
+    var preset: ServicePreset
     var executable: String
     var arguments: String
     var stopMode: StopMode
     var stopExecutable: String
     var stopArguments: String
 
-    private static let executableKey = "openclaw.executable"
-    private static let argumentsKey = "openclaw.arguments"
-    private static let stopModeKey = "openclaw.stopMode"
-    private static let stopExecutableKey = "openclaw.stopExecutable"
-    private static let stopArgumentsKey = "openclaw.stopArguments"
+    private static let presetKey = "service.preset"
+    private static let executableKey = "service.executable"
+    private static let argumentsKey = "service.arguments"
+    private static let stopModeKey = "service.stopMode"
+    private static let stopExecutableKey = "service.stopExecutable"
+    private static let stopArgumentsKey = "service.stopArguments"
+
     private static let bundledCandidates = [
         "/opt/homebrew/bin/openclaw",
         "/usr/local/bin/openclaw",
         "/usr/bin/openclaw"
     ]
 
-    static func load(from defaults: UserDefaults = .standard) -> OpenClawConfiguration {
+    private static let hermesCandidates = [
+        "/opt/homebrew/bin/hermes",
+        "/usr/local/bin/hermes",
+        "/usr/bin/hermes"
+    ]
+
+    static func load(from defaults: UserDefaults = .standard) -> ServiceConfiguration {
+        let savedPresetRaw = defaults.string(forKey: presetKey) ?? ""
+        let savedPreset = ServicePreset(rawValue: savedPresetRaw) ?? .openclaw
         let savedExecutable = defaults.string(forKey: executableKey)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let savedArguments = defaults.string(forKey: argumentsKey) ?? ""
         let savedStopMode = StopMode(rawValue: defaults.string(forKey: stopModeKey) ?? "") ?? .command
         let savedStopExecutable = defaults.string(forKey: stopExecutableKey)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let savedStopArguments = defaults.string(forKey: stopArgumentsKey) ?? ""
-        return OpenClawConfiguration(
-            executable: savedExecutable.isEmpty ? defaultExecutable() : savedExecutable,
-            arguments: savedArguments,
-            stopMode: savedStopMode,
-            stopExecutable: savedStopExecutable,
-            stopArguments: savedStopArguments
-        )
+
+        if savedPresetRaw.isEmpty {
+            let migratedExec = savedExecutable.isEmpty ? defaultExecutable(for: .openclaw) : savedExecutable
+            let migratedStopExec = savedStopExecutable.isEmpty ? defaultStopExecutable(for: .openclaw) : savedStopExecutable
+            let migratedStopArgs = savedStopArguments.isEmpty ? defaultStopArguments(for: .openclaw) : savedStopArguments
+            return ServiceConfiguration(
+                preset: .openclaw,
+                executable: migratedExec,
+                arguments: savedArguments.isEmpty ? defaultArguments(for: .openclaw) : savedArguments,
+                stopMode: savedStopMode,
+                stopExecutable: migratedStopExec,
+                stopArguments: migratedStopArgs
+            )
+        }
+
+        switch savedPreset {
+        case .openclaw, .hermes:
+            let resolvedExec = savedExecutable.isEmpty ? defaultExecutable(for: savedPreset) : savedExecutable
+            let resolvedStopExec = savedStopExecutable.isEmpty ? defaultStopExecutable(for: savedPreset) : savedStopExecutable
+            let resolvedArgs = savedArguments.isEmpty ? defaultArguments(for: savedPreset) : savedArguments
+            let resolvedStopArgs = savedStopArguments.isEmpty ? defaultStopArguments(for: savedPreset) : savedStopArguments
+            return ServiceConfiguration(
+                preset: savedPreset,
+                executable: resolvedExec,
+                arguments: resolvedArgs,
+                stopMode: savedStopMode,
+                stopExecutable: resolvedStopExec,
+                stopArguments: resolvedStopArgs
+            )
+        case .custom:
+            return ServiceConfiguration(
+                preset: .custom,
+                executable: savedExecutable.isEmpty ? defaultExecutable(for: .custom) : savedExecutable,
+                arguments: savedArguments,
+                stopMode: savedStopMode,
+                stopExecutable: savedStopExecutable,
+                stopArguments: savedStopArguments
+            )
+        }
     }
 
     func save(to defaults: UserDefaults = .standard) {
+        defaults.set(preset.rawValue, forKey: Self.presetKey)
         defaults.set(executable, forKey: Self.executableKey)
         defaults.set(arguments, forKey: Self.argumentsKey)
         defaults.set(stopMode.rawValue, forKey: Self.stopModeKey)
@@ -127,11 +251,38 @@ struct OpenClawConfiguration: Equatable, Sendable {
         defaults.set(stopArguments, forKey: Self.stopArgumentsKey)
     }
 
+    var isPresetLocked: Bool {
+        preset != .custom
+    }
+
+    var activeServiceName: LocalizedText {
+        preset.displayName
+    }
+
+    var effectiveProcessNames: Set<String> {
+        if preset == .custom {
+            let trimmed = executable.trimmingCharacters(in: .whitespacesAndNewlines)
+            let basename = trimmed.contains("/") ? URL(fileURLWithPath: trimmed).lastPathComponent : trimmed
+            return Set([basename].filter { !$0.isEmpty })
+        }
+        return preset.processNames
+    }
+
     func resolvedExecutableURL() throws -> URL {
-        try Self.resolveExecutable(from: executable)
+        if preset == .openclaw || preset == .hermes {
+            if let scriptURL = bundledScriptURL(named: preset.startScriptName) {
+                return scriptURL
+            }
+        }
+        return try Self.resolveExecutable(from: executable)
     }
 
     func resolvedStopExecutableURL() throws -> URL? {
+        if preset == .openclaw || preset == .hermes {
+            if let scriptURL = bundledScriptURL(named: preset.stopScriptName) {
+                return scriptURL
+            }
+        }
         let trimmed = stopExecutable.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             return nil
@@ -140,19 +291,36 @@ struct OpenClawConfiguration: Equatable, Sendable {
     }
 
     func parsedStopArguments() throws -> [String] {
-        try ShellWordsParser.parse(stopArguments)
+        if preset == .openclaw || preset == .hermes {
+            return []
+        }
+        return try ShellWordsParser.parse(stopArguments)
+    }
+
+    func bundledScriptURL(named scriptName: String) -> URL? {
+        guard !scriptName.isEmpty else { return nil }
+        guard let resourceURL = Bundle.main.resourceURL else { return nil }
+        let directURL = resourceURL.appendingPathComponent(scriptName)
+        if FileManager.default.isExecutableFile(atPath: directURL.path) {
+            return directURL
+        }
+        let scriptsSubdirURL = resourceURL.appendingPathComponent("Scripts").appendingPathComponent(scriptName)
+        if FileManager.default.isExecutableFile(atPath: scriptsSubdirURL.path) {
+            return scriptsSubdirURL
+        }
+        return nil
     }
 
     private static func resolveExecutable(from executable: String) throws -> URL {
         let trimmed = executable.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
-            throw OpenClawConfigurationError.missingExecutable
+            throw ServiceConfigurationError.missingExecutable
         }
 
         if trimmed.contains("/") {
             let expanded = NSString(string: trimmed).expandingTildeInPath
             guard FileManager.default.isExecutableFile(atPath: expanded) else {
-                throw OpenClawConfigurationError.executableNotFound(expanded)
+                throw ServiceConfigurationError.executableNotFound(expanded)
             }
             return URL(fileURLWithPath: expanded)
         }
@@ -160,7 +328,7 @@ struct OpenClawConfiguration: Equatable, Sendable {
         let searchPaths = (ProcessInfo.processInfo.environment["PATH"] ?? "")
             .split(separator: ":")
             .map(String.init)
-            + Self.bundledCandidates.map { URL(fileURLWithPath: $0).deletingLastPathComponent().path }
+            + PathResolver.allSearchPaths
 
         for directory in Array(Set(searchPaths)) where !directory.isEmpty {
             let candidate = URL(fileURLWithPath: directory).appendingPathComponent(trimmed).path
@@ -169,19 +337,55 @@ struct OpenClawConfiguration: Equatable, Sendable {
             }
         }
 
-        throw OpenClawConfigurationError.executableNotFound(trimmed)
+        throw ServiceConfigurationError.executableNotFound(trimmed)
     }
 
     func parsedArguments() throws -> [String] {
-        try ShellWordsParser.parse(arguments)
+        if preset == .openclaw || preset == .hermes {
+            if bundledScriptURL(named: preset.startScriptName) != nil {
+                return []
+            }
+        }
+        return try ShellWordsParser.parse(arguments)
     }
 
-    private static func defaultExecutable() -> String {
-        bundledCandidates.first(where: { FileManager.default.isExecutableFile(atPath: $0) }) ?? "openclaw"
+    static func defaultExecutable(for preset: ServicePreset) -> String {
+        switch preset {
+        case .openclaw:
+            return bundledCandidates.first(where: { FileManager.default.isExecutableFile(atPath: $0) }) ?? "openclaw"
+        case .hermes:
+            return hermesCandidates.first(where: { FileManager.default.isExecutableFile(atPath: $0) }) ?? "hermes"
+        case .custom:
+            return ""
+        }
+    }
+
+    static func defaultStopExecutable(for preset: ServicePreset) -> String {
+        defaultExecutable(for: preset)
+    }
+
+    static func defaultArguments(for preset: ServicePreset) -> String {
+        preset.defaultArguments
+    }
+
+    static func defaultStopArguments(for preset: ServicePreset) -> String {
+        preset.defaultStopArguments
     }
 }
 
-enum OpenClawConfigurationError: LocalizedError {
+private enum PathResolver {
+    static let allSearchPaths: [String] = [
+        "/opt/homebrew/bin",
+        "/usr/local/bin",
+        NSHomeDirectory() + "/.local/bin",
+        "/usr/bin",
+        "/bin",
+        "/usr/sbin",
+        "/sbin"
+    ]
+}
+
+enum ServiceConfigurationError: LocalizedError {
     case missingExecutable
     case executableNotFound(String)
     case invalidArguments(LocalizedText)
@@ -189,9 +393,9 @@ enum OpenClawConfigurationError: LocalizedError {
     var localizedText: LocalizedText {
         switch self {
         case .missingExecutable:
-            return LT("请先填写 OpenClaw 可执行文件路径或命令名。", "Please enter the OpenClaw executable path or command name.")
+            return LT("请先填写服务可执行文件路径或命令名。", "Please enter the service executable path or command name.")
         case .executableNotFound(let value):
-            return LT("没有找到可执行的 OpenClaw 命令：\(value)。", "Could not find an executable OpenClaw command: \(value).")
+            return LT("没有找到可执行的服务命令：\(value)。", "Could not find an executable service command: \(value).")
         case .invalidArguments(let message):
             return message
         }
@@ -251,13 +455,13 @@ private enum ShellWordsParser {
         }
 
         if isEscaping {
-            throw OpenClawConfigurationError.invalidArguments(
+            throw ServiceConfigurationError.invalidArguments(
                 LT("参数末尾存在未完成的转义字符。", "The arguments end with an unfinished escape character.")
             )
         }
 
         if inSingleQuote || inDoubleQuote {
-            throw OpenClawConfigurationError.invalidArguments(
+            throw ServiceConfigurationError.invalidArguments(
                 LT("参数中存在未闭合的引号。", "There is an unclosed quote in the arguments.")
             )
         }
@@ -302,9 +506,9 @@ enum ServiceStatus: String {
         case .stopped:
             return .secondary
         case .running:
-            return .green
+            return Color(red: 0.05, green: 0.6, blue: 0.24)
         case .error:
-            return .orange
+            return Color(red: 0.78, green: 0.15, blue: 0.18)
         }
     }
 }
@@ -341,7 +545,7 @@ final class RuntimeLogStore: ObservableObject {
         return formatter
     }()
 
-    private let systemLogger = Logger(subsystem: "bigtooth.ClawWaker", category: "runtime")
+    private let systemLogger = Logger(subsystem: "bigtooth.AgentWaker", category: "runtime")
     private let maxEntries = 400
     private let fileURL: URL
 
@@ -349,7 +553,7 @@ final class RuntimeLogStore: ObservableObject {
         let logsDirectory = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library")
             .appendingPathComponent("Logs")
-            .appendingPathComponent("ClawWaker", isDirectory: true)
+            .appendingPathComponent("AgentWaker", isDirectory: true)
         try? FileManager.default.createDirectory(at: logsDirectory, withIntermediateDirectories: true)
         fileURL = logsDirectory.appendingPathComponent("runtime.log")
     }
@@ -438,10 +642,10 @@ enum StopMode: String, CaseIterable, Identifiable, Sendable {
 }
 
 @MainActor
-final class OpenClawServiceController: ObservableObject {
+final class AgentServiceController: ObservableObject {
     @Published private(set) var status: ServiceStatus = .stopped
     @Published private(set) var runningProcesses: [RunningProcessSnapshot] = []
-    @Published private(set) var activityMessage = LT("OpenClaw 当前未运行。", "OpenClaw is not running.")
+    @Published private(set) var activityMessage = LT("AgentWaker 当前未运行服务。", "AgentWaker is not running any service.")
     @Published private(set) var lastErrorMessage: LocalizedText?
     @Published private(set) var isLaunching = false
     @Published private(set) var lastCommandRecord: CommandExecutionRecord?
@@ -453,8 +657,8 @@ final class OpenClawServiceController: ObservableObject {
 
     private var launchedProcess: Process?
     private var refreshTimer: Timer?
-    private var lastKnownConfiguration = OpenClawConfiguration.load()
-    private let inspectionQueue = DispatchQueue(label: "ClawWaker.OpenClawServiceController.inspect", qos: .utility)
+    private var lastKnownConfiguration = ServiceConfiguration.load()
+    private let inspectionQueue = DispatchQueue(label: "AgentWaker.ServiceController.inspect", qos: .utility)
     private let logStore: RuntimeLogStore
     private let serviceLogCategory = LT("服务", "Service")
     private var refreshGeneration = 0
@@ -482,7 +686,7 @@ final class OpenClawServiceController: ObservableObject {
         !runningProcesses.isEmpty
     }
 
-    func refreshStatus(configuration: OpenClawConfiguration) {
+    func refreshStatus(configuration: ServiceConfiguration) {
         lastKnownConfiguration = configuration
         refreshGeneration += 1
         let generation = refreshGeneration
@@ -496,19 +700,23 @@ final class OpenClawServiceController: ObservableObject {
         }
     }
 
-    func start(configuration: OpenClawConfiguration, source: ServiceActionSource) {
+    func start(configuration: ServiceConfiguration, source: ServiceActionSource) {
         lastKnownConfiguration = configuration
+        let serviceName = configuration.activeServiceName
 
         if !runningProcesses.isEmpty {
             status = .running
             isLaunching = false
             lastErrorMessage = nil
-            activityMessage = LT("OpenClaw 已在运行，无需重复启动。", "OpenClaw is already running. No need to start it again.")
+            activityMessage = LT(
+                "\(serviceName.zh)已在运行，无需重复启动。",
+                "\(serviceName.en) is already running. No need to start it again."
+            )
             logStore.record(
                 category: serviceLogCategory,
                 LT(
-                    "检测到 OpenClaw 已在运行，跳过\(source.label.zh)启动。",
-                    "OpenClaw is already running, skipping \(source.label.en) start."
+                    "检测到 \(serviceName.zh) 已在运行，跳过\(source.label.zh)启动。",
+                    "Detected \(serviceName.en) is already running, skipping \(source.label.en) start."
                 )
             )
             onChange?()
@@ -520,12 +728,12 @@ final class OpenClawServiceController: ObservableObject {
         launchDetectionDeadline = Date().addingTimeInterval(12)
         launchProbeGeneration += 1
         activityMessage = source == .automatic
-            ? LT("满足自动规则，正在启动 OpenClaw...", "Automatic conditions met. Starting OpenClaw...")
-            : LT("正在启动 OpenClaw...", "Starting OpenClaw...")
+            ? LT("满足自动规则，正在启动 \(serviceName.zh)...", "Automatic conditions met. Starting \(serviceName.en)...")
+            : LT("正在启动 \(serviceName.zh)...", "Starting \(serviceName.en)...")
         lastErrorMessage = nil
         logStore.record(
             category: serviceLogCategory,
-            LT("准备\(source.label.zh)启动 OpenClaw。", "Preparing a \(source.label.en) OpenClaw start.")
+            LT("准备\(source.label.zh)启动 \(serviceName.zh)。", "Preparing a \(source.label.en) \(serviceName.en) start.")
         )
         onChange?()
 
@@ -540,8 +748,8 @@ final class OpenClawServiceController: ObservableObject {
                 )
             )
             recordCommand(executableURL: executableURL, arguments: arguments, stdout: "", stderr: "", exitCode: nil)
-            let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("ClawWaker-openclaw-stdout-\(UUID().uuidString).log")
-            let errorURL = FileManager.default.temporaryDirectory.appendingPathComponent("ClawWaker-openclaw-stderr-\(UUID().uuidString).log")
+            let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("AgentWaker-\(configuration.preset.rawValue)-stdout-\(UUID().uuidString).log")
+            let errorURL = FileManager.default.temporaryDirectory.appendingPathComponent("AgentWaker-\(configuration.preset.rawValue)-stderr-\(UUID().uuidString).log")
             FileManager.default.createFile(atPath: outputURL.path, contents: nil)
             FileManager.default.createFile(atPath: errorURL.path, contents: nil)
             let outputHandle = try FileHandle(forWritingTo: outputURL)
@@ -580,8 +788,8 @@ final class OpenClawServiceController: ObservableObject {
                         let localizedReason = errorText.isEmpty
                             ? LT("进程退出，状态码 \(process.terminationStatus)。", "The process exited with status \(process.terminationStatus).")
                             : LT(errorText, errorText)
-                        self.lastErrorMessage = LT("OpenClaw 启动失败：\(localizedReason.zh)", "Failed to start OpenClaw: \(localizedReason.en)")
-                        self.activityMessage = LT("OpenClaw 启动后很快退出。", "OpenClaw exited shortly after launch.")
+                        self.lastErrorMessage = LT("\(serviceName.zh) 启动失败：\(localizedReason.zh)", "Failed to start \(serviceName.en): \(localizedReason.en)")
+                        self.activityMessage = LT("\(serviceName.zh) 启动后很快退出。", "\(serviceName.en) exited shortly after launch.")
                         self.status = .error
                         self.logStore.record(
                             category: self.serviceLogCategory,
@@ -592,7 +800,7 @@ final class OpenClawServiceController: ObservableObject {
                     }
                     self.logStore.record(
                         category: self.serviceLogCategory,
-                        LT("启动命令已结束，继续等待 OpenClaw 进程出现。", "The start command has finished. Waiting for the OpenClaw process to appear.")
+                        LT("启动命令已结束，继续等待 \(serviceName.zh) 进程出现。", "The start command has finished. Waiting for the \(serviceName.en) process to appear.")
                     )
                     self.refreshStatus(configuration: self.lastKnownConfiguration)
                 }
@@ -603,8 +811,8 @@ final class OpenClawServiceController: ObservableObject {
             isLaunching = false
             lastErrorMessage = nil
             activityMessage = source == .automatic
-                ? LT("满足自动规则，已执行 OpenClaw 启动命令，等待进程出现。", "Automatic conditions met. Ran the OpenClaw start command and waiting for the process to appear.")
-                : LT("已执行 OpenClaw 启动命令，等待进程出现。", "Ran the OpenClaw start command and waiting for the process to appear.")
+                ? LT("满足自动规则，已执行 \(serviceName.zh) 启动命令，等待进程出现。", "Automatic conditions met. Ran the \(serviceName.en) start command and waiting for the process to appear.")
+                : LT("已执行 \(serviceName.zh) 启动命令，等待进程出现。", "Ran the \(serviceName.en) start command and waiting for the process to appear.")
             scheduleLaunchProbe(configuration: configuration, generation: launchProbeGeneration)
             onChange?()
         } catch {
@@ -615,29 +823,31 @@ final class OpenClawServiceController: ObservableObject {
             launchDetectionDeadline = nil
             lastErrorMessage = localizedError
             activityMessage = source == .automatic
-                ? LT("自动启动 OpenClaw 失败。", "Failed to start OpenClaw automatically.")
-                : LT("启动 OpenClaw 失败。", "Failed to start OpenClaw.")
+                ? LT("自动启动 \(serviceName.zh) 失败。", "Failed to start \(serviceName.en) automatically.")
+                : LT("启动 \(serviceName.zh) 失败。", "Failed to start \(serviceName.en).")
             logStore.record(category: serviceLogCategory, LT("启动异常：\(localizedError.zh)", "Start error: \(localizedError.en)"))
             onChange?()
         }
     }
 
-    func stop(configuration: OpenClawConfiguration, source: ServiceActionSource) {
+    func stop(configuration: ServiceConfiguration, source: ServiceActionSource) {
         lastKnownConfiguration = configuration
         pendingManagedLaunchSource = nil
         launchDetectionDeadline = nil
+        let serviceName = configuration.activeServiceName
 
         if configuration.stopMode == .command,
            let stopExecutableURL = try? configuration.resolvedStopExecutableURL() {
             do {
                 logStore.record(
                     category: serviceLogCategory,
-                    LT("准备通过停止命令\(source.label.zh)关闭 OpenClaw。", "Preparing to stop OpenClaw with a \(source.label.en) stop command.")
+                    LT("准备通过停止命令\(source.label.zh)关闭 \(serviceName.zh)。", "Preparing to stop \(serviceName.en) with a \(source.label.en) stop command.")
                 )
-                recordCommand(executableURL: stopExecutableURL, arguments: (try? configuration.parsedStopArguments()) ?? [], stdout: "", stderr: "", exitCode: nil)
+                let stopArguments = (try? configuration.parsedStopArguments()) ?? []
+                recordCommand(executableURL: stopExecutableURL, arguments: stopArguments, stdout: "", stderr: "", exitCode: nil)
                 try executeStopCommand(
                     executableURL: stopExecutableURL,
-                    arguments: configuration.parsedStopArguments(),
+                    arguments: stopArguments,
                     configuration: configuration,
                     source: source
                 )
@@ -646,7 +856,7 @@ final class OpenClawServiceController: ObservableObject {
                 let localizedError = localizedErrorText(error)
                 status = .error
                 lastErrorMessage = localizedError
-                activityMessage = LT("执行 OpenClaw 停止命令失败。", "Failed to run the OpenClaw stop command.")
+                activityMessage = LT("执行 \(serviceName.zh) 停止命令失败。", "Failed to run the \(serviceName.en) stop command.")
                 logStore.record(category: serviceLogCategory, LT("停止命令执行异常：\(localizedError.zh)", "Stop command error: \(localizedError.en)"))
                 onChange?()
                 return
@@ -657,10 +867,10 @@ final class OpenClawServiceController: ObservableObject {
             isManagedByApp = false
             managedStartSource = nil
             refreshStatus(configuration: configuration)
-            activityMessage = LT("OpenClaw 当前没有运行中的进程。", "There are no running OpenClaw processes.")
+            activityMessage = LT("\(serviceName.zh) 当前没有运行中的进程。", "There are no running \(serviceName.en) processes.")
             logStore.record(
                 category: serviceLogCategory,
-                LT("收到\(source.label.zh)停止请求，但当前没有可停止的 OpenClaw 进程。", "Received a \(source.label.en) stop request, but there are no OpenClaw processes to stop.")
+                LT("收到\(source.label.zh)停止请求，但当前没有可停止的 \(serviceName.zh) 进程。", "Received a \(source.label.en) stop request, but there are no \(serviceName.en) processes to stop.")
             )
             onChange?()
             return
@@ -679,16 +889,16 @@ final class OpenClawServiceController: ObservableObject {
             lastErrorMessage = nil
             status = .stopped
             activityMessage = source == .automatic
-                ? LT("自动策略请求停止 OpenClaw。", "Automatic policy requested OpenClaw to stop.")
-                : LT("已请求停止 OpenClaw。", "Requested OpenClaw to stop.")
+                ? LT("自动策略请求停止 \(serviceName.zh)。", "Automatic policy requested \(serviceName.en) to stop.")
+                : LT("已请求停止 \(serviceName.zh)。", "Requested \(serviceName.en) to stop.")
             logStore.record(
                 category: serviceLogCategory,
-                LT("已通过 kill 请求\(source.label.zh)停止 OpenClaw。", "Sent kill to stop OpenClaw from a \(source.label.en) request.")
+                LT("已通过 kill 请求\(source.label.zh)停止 \(serviceName.zh)。", "Sent kill to stop \(serviceName.en) from a \(source.label.en) request.")
             )
         } else {
             let joined = failures.joined(separator: ", ")
             lastErrorMessage = LT("以下进程停止失败：\(joined)。", "Failed to stop these processes: \(joined).")
-            activityMessage = LT("部分 OpenClaw 进程停止失败。", "Some OpenClaw processes failed to stop.")
+            activityMessage = LT("部分 \(serviceName.zh) 进程停止失败。", "Some \(serviceName.en) processes failed to stop.")
             status = .error
             logStore.record(category: serviceLogCategory, LT("部分进程停止失败：\(joined)。", "Some processes failed to stop: \(joined)."))
         }
@@ -701,11 +911,12 @@ final class OpenClawServiceController: ObservableObject {
     private func executeStopCommand(
         executableURL: URL,
         arguments: [String],
-        configuration: OpenClawConfiguration,
+        configuration: ServiceConfiguration,
         source: ServiceActionSource
     ) throws {
-        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("ClawWaker-openclaw-stop-stdout-\(UUID().uuidString).log")
-        let errorURL = FileManager.default.temporaryDirectory.appendingPathComponent("ClawWaker-openclaw-stop-stderr-\(UUID().uuidString).log")
+        let serviceName = configuration.activeServiceName
+        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("AgentWaker-\(configuration.preset.rawValue)-stop-stdout-\(UUID().uuidString).log")
+        let errorURL = FileManager.default.temporaryDirectory.appendingPathComponent("AgentWaker-\(configuration.preset.rawValue)-stop-stderr-\(UUID().uuidString).log")
         FileManager.default.createFile(atPath: outputURL.path, contents: nil)
         FileManager.default.createFile(atPath: errorURL.path, contents: nil)
         let outputHandle = try FileHandle(forWritingTo: outputURL)
@@ -740,8 +951,8 @@ final class OpenClawServiceController: ObservableObject {
                     let localizedReason = errorText.isEmpty
                         ? LT("进程退出，状态码 \(process.terminationStatus)。", "The process exited with status \(process.terminationStatus).")
                         : LT(errorText, errorText)
-                    self.lastErrorMessage = LT("OpenClaw 停止失败：\(localizedReason.zh)", "Failed to stop OpenClaw: \(localizedReason.en)")
-                    self.activityMessage = LT("OpenClaw 停止命令执行失败。", "The OpenClaw stop command failed.")
+                    self.lastErrorMessage = LT("\(serviceName.zh) 停止失败：\(localizedReason.zh)", "Failed to stop \(serviceName.en): \(localizedReason.en)")
+                    self.activityMessage = LT("\(serviceName.zh) 停止命令执行失败。", "The \(serviceName.en) stop command failed.")
                     self.status = .error
                     self.logStore.record(category: self.serviceLogCategory, LT("停止失败：\(localizedReason.zh)", "Stop failed: \(localizedReason.en)"))
                 } else {
@@ -750,9 +961,9 @@ final class OpenClawServiceController: ObservableObject {
                     self.lastErrorMessage = nil
                     self.activityMessage = outputText.isEmpty
                         ? (source == .automatic
-                            ? LT("自动策略已执行 OpenClaw 停止命令。", "Automatic policy ran the OpenClaw stop command.")
-                            : LT("已执行 OpenClaw 停止命令。", "Ran the OpenClaw stop command."))
-                        : LT("已执行 OpenClaw 停止命令：\(outputText)", "Ran the OpenClaw stop command: \(outputText)")
+                            ? LT("自动策略已执行 \(serviceName.zh) 停止命令。", "Automatic policy ran the \(serviceName.en) stop command.")
+                            : LT("已执行 \(serviceName.zh) 停止命令。", "Ran the \(serviceName.en) stop command."))
+                        : LT("已执行 \(serviceName.zh) 停止命令：\(outputText)", "Ran the \(serviceName.en) stop command: \(outputText)")
                     self.logStore.record(category: self.serviceLogCategory, LT("停止命令执行完成。", "Stop command completed."))
                 }
 
@@ -762,8 +973,8 @@ final class OpenClawServiceController: ObservableObject {
 
         try process.run()
         activityMessage = source == .automatic
-            ? LT("自动策略正在执行 OpenClaw 停止命令...", "Automatic policy is running the OpenClaw stop command...")
-            : LT("正在执行 OpenClaw 停止命令...", "Running the OpenClaw stop command...")
+            ? LT("自动策略正在执行 \(serviceName.zh) 停止命令...", "Automatic policy is running the \(serviceName.en) stop command...")
+            : LT("正在执行 \(serviceName.zh) 停止命令...", "Running the \(serviceName.en) stop command...")
         lastErrorMessage = nil
         onChange?()
     }
@@ -786,11 +997,12 @@ final class OpenClawServiceController: ObservableObject {
 
     private func applyRefreshResult(_ result: ServiceInspectionResult) {
         runningProcesses = result.processes
+        let serviceName = lastKnownConfiguration.activeServiceName
 
         if let errorMessage = result.errorMessage {
             status = .error
             lastErrorMessage = errorMessage
-            activityMessage = LT("读取 OpenClaw 进程状态失败。", "Failed to read the OpenClaw process state.")
+            activityMessage = LT("读取 \(serviceName.zh) 进程状态失败。", "Failed to read the \(serviceName.en) process state.")
             logStore.record(category: serviceLogCategory, LT("刷新进程状态失败：\(errorMessage.zh)", "Failed to refresh process state: \(errorMessage.en)"))
             onChange?()
             return
@@ -803,23 +1015,23 @@ final class OpenClawServiceController: ObservableObject {
                 status = .stopped
                 lastErrorMessage = nil
                 let waitMessage = pendingSource == .automatic
-                    ? LT("自动启动命令已执行，等待 OpenClaw 进程出现。", "Automatic start command ran. Waiting for the OpenClaw process to appear.")
-                    : LT("启动命令已执行，等待 OpenClaw 进程出现。", "Start command ran. Waiting for the OpenClaw process to appear.")
+                    ? LT("自动启动命令已执行，等待 \(serviceName.zh) 进程出现。", "Automatic start command ran. Waiting for the \(serviceName.en) process to appear.")
+                    : LT("启动命令已执行，等待 \(serviceName.zh) 进程出现。", "Start command ran. Waiting for the \(serviceName.en) process to appear.")
                 activityMessage = waitMessage
-                logStore.record(category: serviceLogCategory, LT("尚未检测到 OpenClaw 进程，继续等待启动结果。", "OpenClaw is not visible yet. Continuing to wait for launch confirmation."))
+                logStore.record(category: serviceLogCategory, LT("尚未检测到 \(serviceName.zh) 进程，继续等待启动结果。", "\(serviceName.en) is not visible yet. Continuing to wait for launch confirmation."))
                 onChange?()
                 return
             }
 
             if pendingManagedLaunchSource != nil {
-                let timeoutMessage = LT("启动命令已执行，但在等待窗口内没有检测到 OpenClaw 进程。", "The start command ran, but no OpenClaw process appeared within the wait window.")
-                lastErrorMessage = LT("OpenClaw 启动失败：\(timeoutMessage.zh)", "Failed to start OpenClaw: \(timeoutMessage.en)")
-                activityMessage = LT("启动命令未真正拉起 OpenClaw。", "The start command did not actually launch OpenClaw.")
+                let timeoutMessage = LT("启动命令已执行，但在等待窗口内没有检测到 \(serviceName.zh) 进程。", "The start command ran, but no \(serviceName.en) process appeared within the wait window.")
+                lastErrorMessage = LT("\(serviceName.zh) 启动失败：\(timeoutMessage.zh)", "Failed to start \(serviceName.en): \(timeoutMessage.en)")
+                activityMessage = LT("启动命令未真正拉起 \(serviceName.zh)。", "The start command did not actually launch \(serviceName.en).")
                 status = .error
                 logStore.record(category: serviceLogCategory, LT("启动超时：\(timeoutMessage.zh)", "Launch timed out: \(timeoutMessage.en)"))
             } else {
                 status = .stopped
-                activityMessage = LT("OpenClaw 当前未运行。", "OpenClaw is not running.")
+                activityMessage = LT("\(serviceName.zh) 当前未运行。", "\(serviceName.en) is not running.")
             }
             isManagedByApp = false
             managedStartSource = nil
@@ -834,18 +1046,19 @@ final class OpenClawServiceController: ObservableObject {
                 launchDetectionDeadline = nil
                 logStore.record(
                     category: serviceLogCategory,
-                    LT("检测到 OpenClaw 进程，已标记为由 ClawWaker\(pendingSource.label.zh)启动。", "Detected an OpenClaw process and marked it as started by ClawWaker (\(pendingSource.label.en)).")
+                    LT("检测到 \(serviceName.zh) 进程，已标记为由空动\(pendingSource.label.zh)启动。", "Detected a \(serviceName.en) process and marked it as started by AgentWaker (\(pendingSource.label.en)).")
                 )
             }
             lastErrorMessage = nil
-            activityMessage = LT("检测到 \(runningProcesses.count) 个 OpenClaw 进程。", "Detected \(runningProcesses.count) OpenClaw process(es).")
+            activityMessage = LT("检测到 \(runningProcesses.count) 个 \(serviceName.zh) 进程。", "Detected \(runningProcesses.count) \(serviceName.en) process(es).")
         }
 
         onChange?()
     }
 
-    private func scheduleLaunchProbe(configuration: OpenClawConfiguration, generation: Int) {
-        logStore.record(category: serviceLogCategory, LT("开始轮询 OpenClaw 进程，等待启动确认。", "Started polling for the OpenClaw process while waiting for launch confirmation."))
+    private func scheduleLaunchProbe(configuration: ServiceConfiguration, generation: Int) {
+        let serviceName = configuration.activeServiceName
+        logStore.record(category: serviceLogCategory, LT("开始轮询 \(serviceName.zh) 进程，等待启动确认。", "Started polling for the \(serviceName.en) process while waiting for launch confirmation."))
         refreshStatus(configuration: configuration)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
             guard let self,
@@ -875,7 +1088,7 @@ enum ProcessInspectionError: LocalizedError {
 }
 
 private func localizedErrorText(_ error: Error) -> LocalizedText {
-    if let error = error as? OpenClawConfigurationError {
+    if let error = error as? ServiceConfigurationError {
         return error.localizedText
     }
     if let error = error as? ProcessInspectionError {
@@ -885,25 +1098,16 @@ private func localizedErrorText(_ error: Error) -> LocalizedText {
 }
 
 private enum ProcessInspector {
-    private static let knownExecutableBasenames: Set<String> = [
-        "openclaw",
-        "openclaw-gateway"
-    ]
+    static func matchingProcesses(configuration: ServiceConfiguration) throws -> [RunningProcessSnapshot] {
+        let searchPatterns = configuration.effectiveProcessNames
 
-    static func matchingProcesses(configuration: OpenClawConfiguration) throws -> [RunningProcessSnapshot] {
-        let resolvedPath = try? configuration.resolvedExecutableURL().path
-        let requestedExecutable = configuration.executable.trimmingCharacters(in: .whitespacesAndNewlines)
-        let requestedBasename = URL(fileURLWithPath: requestedExecutable).lastPathComponent
-        let resolvedBasename = resolvedPath.map { URL(fileURLWithPath: $0).lastPathComponent }
-        let candidateNames = Set([requestedBasename, resolvedBasename].compactMap { $0 }.filter { !$0.isEmpty })
-            .union(knownExecutableBasenames)
         var seenPIDs = Set<pid_t>()
         var matches: [RunningProcessSnapshot] = []
 
-        for executableName in candidateNames.sorted() {
+        for pattern in searchPatterns.sorted() {
             let pgrepResult = try CommandRunner.run(
                 executablePath: "/usr/bin/pgrep",
-                arguments: ["-x", executableName]
+                arguments: ["-f", pattern]
             )
 
             let pidOutput: String
@@ -926,6 +1130,7 @@ private enum ProcessInspector {
                 guard let snapshot = try processSnapshot(for: pid) else {
                     continue
                 }
+                if snapshot.command.contains("AgentWaker") { continue }
                 seenPIDs.insert(pid)
                 matches.append(snapshot)
             }
@@ -956,7 +1161,7 @@ private enum ProcessInspector {
         }
 
         let command = String(components[1]).trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !command.contains("ClawWaker.app") else {
+        guard !command.contains("AgentWaker.app") else {
             return nil
         }
 
@@ -970,7 +1175,7 @@ private struct ServiceInspectionResult: Sendable {
 }
 
 private enum ServiceStatusProbe {
-    static func inspect(configuration: OpenClawConfiguration) -> ServiceInspectionResult {
+    static func inspect(configuration: ServiceConfiguration) -> ServiceInspectionResult {
         do {
             return ServiceInspectionResult(
                 processes: try ProcessInspector.matchingProcesses(configuration: configuration),
@@ -1024,14 +1229,7 @@ private struct CommandResult: Sendable {
 private enum AppEnvironment {
     static func launchEnvironment() -> [String: String] {
         var environment = ProcessInfo.processInfo.environment
-        let preferredPaths = [
-            "/opt/homebrew/bin",
-            "/usr/local/bin",
-            "/usr/bin",
-            "/bin",
-            "/usr/sbin",
-            "/sbin"
-        ]
+        let preferredPaths = PathResolver.allSearchPaths
         let existingPaths = (environment["PATH"] ?? "")
             .split(separator: ":")
             .map(String.init)
@@ -1095,7 +1293,7 @@ final class SystemStateMonitor: ObservableObject {
 
         let displayActive = Self.readDisplayState() ?? {
             if !hasLoggedDisplayProbeFallback {
-                logStore.record(category: systemLogCategory, LT("无法直接读取屏幕电源状态，改用通知维护的屏幕状态。", "Could not read the display power state directly, so ClawWaker is using the notification-maintained display state instead."))
+                logStore.record(category: systemLogCategory, LT("无法直接读取屏幕电源状态，改用通知维护的屏幕状态。", "Could not read the display power state directly, so AgentWaker is using the notification-maintained display state instead."))
                 hasLoggedDisplayProbeFallback = true
             }
             return displayStateOverride ?? previous.isDisplayActive
@@ -1310,14 +1508,24 @@ final class WakeAssertionController: ObservableObject {
 }
 
 @MainActor
-final class ClawWakerAppModel: ObservableObject {
+final class AgentWakerAppModel: ObservableObject {
     @Published var language: AppLanguage
-    @Published var configuration: OpenClawConfiguration
+    @Published var configuration: ServiceConfiguration {
+        didSet {
+            guard configuration.preset != oldValue.preset else { return }
+            let newPreset = configuration.preset
+            configuration.executable = ServiceConfiguration.defaultExecutable(for: newPreset)
+            configuration.arguments = ServiceConfiguration.defaultArguments(for: newPreset)
+            configuration.stopMode = newPreset.defaultStopMode
+            configuration.stopExecutable = ServiceConfiguration.defaultStopExecutable(for: newPreset)
+            configuration.stopArguments = ServiceConfiguration.defaultStopArguments(for: newPreset)
+        }
+    }
     @Published private(set) var automationMessage = LT("等待系统状态更新。", "Waiting for the system state to update.")
     @Published private(set) var wakeLimitationNote = LT("通过公开 API 可以阻止空闲休眠，但无法可靠地绕过合盖后的硬件休眠。", "Public APIs can prevent idle sleep, but they cannot reliably bypass hardware sleep after the lid is closed.")
 
     let runtimeLogStore: RuntimeLogStore
-    let serviceController: OpenClawServiceController
+    let serviceController: AgentServiceController
     let systemMonitor: SystemStateMonitor
     let wakeController: WakeAssertionController
 
@@ -1328,14 +1536,18 @@ final class ClawWakerAppModel: ObservableObject {
     private let automationLogCategory = LT("自动化", "Automation")
     private let systemLogCategory = LT("系统", "System")
 
+    var activeServiceName: LocalizedText {
+        configuration.activeServiceName
+    }
+
     init() {
         let runtimeLogStore = RuntimeLogStore()
         self.runtimeLogStore = runtimeLogStore
-        self.serviceController = OpenClawServiceController(logStore: runtimeLogStore)
+        self.serviceController = AgentServiceController(logStore: runtimeLogStore)
         self.systemMonitor = SystemStateMonitor(logStore: runtimeLogStore)
         self.wakeController = WakeAssertionController()
         language = AppLanguage.load()
-        configuration = OpenClawConfiguration.load()
+        configuration = ServiceConfiguration.load()
         serviceController.$status
             .sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &cancellables)
@@ -1396,7 +1608,7 @@ final class ClawWakerAppModel: ObservableObject {
             }
             .store(in: &cancellables)
 
-        runtimeLogStore.record(category: automationLogCategory, LT("ClawWaker 已启动，开始监听系统状态。", "ClawWaker started and is now monitoring system state."))
+        runtimeLogStore.record(category: automationLogCategory, LT("空动已启动，开始监听系统状态。", "AgentWaker started and is now monitoring system state."))
         refreshAll()
     }
 
@@ -1435,7 +1647,7 @@ final class ClawWakerAppModel: ObservableObject {
 
     func refreshAll() {
         configuration.save()
-        runtimeLogStore.record(category: automationLogCategory, LT("收到刷新请求，重新读取系统状态与 OpenClaw 进程。", "Received a refresh request. Re-reading system state and OpenClaw processes."))
+        runtimeLogStore.record(category: automationLogCategory, LT("收到刷新请求，重新读取系统状态与服务进程。", "Received a refresh request. Re-reading system state and service processes."))
         systemMonitor.refresh()
         serviceController.refreshStatus(configuration: configuration)
         reconcileState(trigger: "manual-refresh")
@@ -1443,7 +1655,7 @@ final class ClawWakerAppModel: ObservableObject {
 
     func saveConfiguration() {
         configuration.save()
-        runtimeLogStore.record(category: automationLogCategory, LT("已保存 OpenClaw 配置。", "Saved the OpenClaw configuration."))
+        runtimeLogStore.record(category: automationLogCategory, LT("已保存服务配置。", "Saved the service configuration."))
         serviceController.refreshStatus(configuration: configuration)
         reconcileState(trigger: "configuration")
     }
@@ -1452,17 +1664,19 @@ final class ClawWakerAppModel: ObservableObject {
         configuration.save()
         manualAutoStartSuppressedUntilReset = false
         nextAutoStartAllowedAt = Date.distantPast
-        runtimeLogStore.record(category: automationLogCategory, LT("用户手动请求启动 OpenClaw。", "The user manually requested OpenClaw to start."))
+        let serviceName = configuration.activeServiceName
+        runtimeLogStore.record(category: automationLogCategory, LT("用户手动请求启动 \(serviceName.zh)。", "The user manually requested \(serviceName.en) to start."))
         serviceController.start(configuration: configuration, source: .manual)
         reconcileState(trigger: "manual-start")
     }
 
     func stopService() {
+        let serviceName = configuration.activeServiceName
         if automationEligible {
             manualAutoStartSuppressedUntilReset = true
-            runtimeLogStore.record(category: automationLogCategory, LT("用户在自动条件满足时手动停止 OpenClaw，本轮条件内暂停自动启动。", "The user manually stopped OpenClaw while automatic conditions were satisfied, so auto-start is paused until the conditions reset."))
+            runtimeLogStore.record(category: automationLogCategory, LT("用户在自动条件满足时手动停止 \(serviceName.zh)，本轮条件内暂停自动启动。", "The user manually stopped \(serviceName.en) while automatic conditions were satisfied, so auto-start is paused until the conditions reset."))
         } else {
-            runtimeLogStore.record(category: automationLogCategory, LT("用户手动请求停止 OpenClaw。", "The user manually requested OpenClaw to stop."))
+            runtimeLogStore.record(category: automationLogCategory, LT("用户手动请求停止 \(serviceName.zh)。", "The user manually requested \(serviceName.en) to stop."))
         }
         serviceController.stop(configuration: configuration, source: .manual)
         reconcileState(trigger: "manual-stop")
@@ -1471,8 +1685,9 @@ final class ClawWakerAppModel: ObservableObject {
     private func reconcileState(trigger: String) {
         let snapshot = systemMonitor.snapshot
         let isEligible = automationEligible
+        let serviceName = configuration.activeServiceName
         if snapshot.isLidClosed {
-            wakeLimitationNote = LT("检测到合盖；ClawWaker 会继续申请防休眠断言，但 macOS 公开接口无法保证合盖后仍保持联网唤醒。", "The lid appears closed. ClawWaker will keep requesting a wake assertion, but public macOS APIs cannot guarantee network wakefulness after the lid is closed.")
+            wakeLimitationNote = LT("检测到合盖；空动能继续申请防休眠断言，但 macOS 公开接口无法保证合盖后仍保持联网唤醒。", "The lid appears closed. AgentWaker will keep requesting a wake assertion, but public macOS APIs cannot guarantee network wakefulness after the lid is closed.")
         } else {
             wakeLimitationNote = LT("已支持显示器黑屏时阻止空闲休眠；如果合上屏幕，系统仍可能因为硬件策略进入睡眠。", "Idle sleep prevention works while the display is dark, but the system may still sleep because of hardware policy when the lid is closed.")
         }
@@ -1487,7 +1702,7 @@ final class ClawWakerAppModel: ObservableObject {
         }
 
         let shouldKeepAwake = isEligible || (serviceController.isRunning && serviceController.isManagedByApp)
-        wakeController.setActive(shouldKeepAwake, reason: "ClawWaker keeps OpenClaw reachable while the display sleeps.")
+        wakeController.setActive(shouldKeepAwake, reason: "AgentWaker keeps \(serviceName.en) reachable while the display sleeps.")
 
         let now = Date()
         let cooldownRemaining = max(0, nextAutoStartAllowedAt.timeIntervalSince(now))
@@ -1504,8 +1719,8 @@ final class ClawWakerAppModel: ObservableObject {
             && serviceController.managedStartSource == .automatic
             && !autoStopIssuedUntilReset {
             autoStopIssuedUntilReset = true
-            automationMessage = LT("自动停止条件触发，正在关闭由 ClawWaker 启动的 OpenClaw。", "Auto-stop conditions were triggered. Stopping the OpenClaw instance started by ClawWaker.")
-            runtimeLogStore.record(category: automationLogCategory, LT("检测到自动条件被破坏，准备停止由 ClawWaker 自动启动的 OpenClaw。", "Automatic conditions were broken. Preparing to stop the OpenClaw instance started automatically by ClawWaker."))
+            automationMessage = LT("自动停止条件触发，正在关闭由空动启动的 \(serviceName.zh)。", "Auto-stop conditions were triggered. Stopping the \(serviceName.en) instance started by AgentWaker.")
+            runtimeLogStore.record(category: automationLogCategory, LT("检测到自动条件被破坏，准备停止由空动自动启动的 \(serviceName.zh)。", "Automatic conditions were broken. Preparing to stop the \(serviceName.en) instance started automatically by AgentWaker."))
             serviceController.stop(configuration: configuration, source: .automatic)
             return
         }
@@ -1516,8 +1731,8 @@ final class ClawWakerAppModel: ObservableObject {
             && !manualAutoStartSuppressedUntilReset
             && now >= nextAutoStartAllowedAt {
             nextAutoStartAllowedAt = now.addingTimeInterval(10)
-            automationMessage = LT("满足自动启动条件，正在尝试启动 OpenClaw。", "Automatic start conditions are met. Trying to start OpenClaw.")
-            runtimeLogStore.record(category: automationLogCategory, LT("自动启动条件满足，开始尝试启动 OpenClaw。", "Automatic start conditions are satisfied. Beginning to start OpenClaw."))
+            automationMessage = LT("满足自动启动条件，正在尝试启动 \(serviceName.zh)。", "Automatic start conditions are met. Trying to start \(serviceName.en).")
+            runtimeLogStore.record(category: automationLogCategory, LT("自动启动条件满足，开始尝试启动 \(serviceName.zh)。", "Automatic start conditions are satisfied. Beginning to start \(serviceName.en)."))
             serviceController.start(configuration: configuration, source: .automatic)
             return
         }
@@ -1530,11 +1745,11 @@ final class ClawWakerAppModel: ObservableObject {
 
         if isEligible {
             if trigger == "manual-stop" && !serviceController.isRunning {
-                automationMessage = LT("你已手动停止 OpenClaw；自动启动会等条件重置后再恢复。", "You manually stopped OpenClaw. Automatic start will resume after the conditions reset.")
+                automationMessage = LT("你已手动停止 \(serviceName.zh)；自动启动会等条件重置后再恢复。", "You manually stopped \(serviceName.en). Automatic start will resume after the conditions reset.")
                 return
             }
             automationMessage = serviceController.isRunning
-                ? LT("自动规则已满足，OpenClaw 当前处于运行中。", "Automatic rules are satisfied and OpenClaw is currently running.")
+                ? LT("自动规则已满足，\(serviceName.zh) 当前处于运行中。", "Automatic rules are satisfied and \(serviceName.en) is currently running.")
                 : LT("自动规则已满足，等待启动或人工干预。", "Automatic rules are satisfied. Waiting for launch or manual intervention.")
             return
         }
@@ -1551,7 +1766,6 @@ final class ClawWakerAppModel: ObservableObject {
             "自动策略等待中：\(displayMessage.zh)、\(powerMessage.zh)、\(idleMessage.zh)。",
             "Automatic policy is waiting: \(displayMessage.en), \(powerMessage.en), \(idleMessage.en)."
         )
-
     }
 }
 

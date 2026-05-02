@@ -1,8 +1,19 @@
 import SwiftUI
 
+// MARK: - opcdesk-inspired design tokens
+private enum DesignToken {
+    static let stone = Color(red: 0.165, green: 0.373, blue: 0.541) // #2A5F8A
+    static let cinnabar = Color(red: 0.620, green: 0.165, blue: 0.170) // #9E2A2B
+    static let inkDeep = Color(red: 0.102, green: 0.102, blue: 0.102) // #1A1A1A
+    static let inkLight = Color(red: 0.400, green: 0.400, blue: 0.400) // #666666
+    static let runningGreen = Color(red: 0.180, green: 0.545, blue: 0.341) // #2E8B57
+    static let cardBackground = Color(nsColor: .controlBackgroundColor).opacity(0.92)
+    static let cardBorder = Color.white.opacity(0.08)
+}
+
 struct ContentView: View {
     @Environment(\.openSettings) private var openSettings
-    @EnvironmentObject private var appModel: ClawWakerAppModel
+    @EnvironmentObject private var appModel: AgentWakerAppModel
 
     private let dashboardColumns = [
         GridItem(.flexible(), spacing: 20, alignment: .top),
@@ -19,6 +30,10 @@ struct ContentView: View {
         appModel.systemMonitor.snapshot
     }
 
+    private var serviceName: LocalizedText {
+        appModel.activeServiceName
+    }
+
     private func t(_ zh: String, _ en: String) -> String {
         appModel.localized(zh: zh, en: en)
     }
@@ -32,7 +47,7 @@ struct ContentView: View {
             LinearGradient(
                 colors: [
                     Color(nsColor: .windowBackgroundColor),
-                    Color.accentColor.opacity(0.08),
+                    DesignToken.stone.opacity(0.08),
                     Color(nsColor: .underPageBackgroundColor)
                 ],
                 startPoint: .topLeading,
@@ -67,6 +82,7 @@ struct ContentView: View {
                         Label(t("English", "中文"), systemImage: "globe")
                     }
                     .buttonStyle(FloatingLanguageButtonStyle())
+                    .focusable(false)
                     .help(text(appModel.language.toggleDescription))
                     .padding(.trailing, 24)
                     .padding(.bottom, 24)
@@ -81,10 +97,10 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 26) {
                 HStack(alignment: .top, spacing: 24) {
                     VStack(alignment: .leading, spacing: 14) {
-                        Text("OPENCLAW")
+                        Text(text(serviceName).uppercased())
                             .font(.system(size: 13, weight: .bold, design: .rounded))
                             .tracking(1.4)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(DesignToken.stone)
 
                         HStack(alignment: .firstTextBaseline, spacing: 14) {
                             Image(systemName: appModel.serviceController.status.symbolName)
@@ -143,7 +159,7 @@ struct ContentView: View {
                     CompactMetricPill(
                         title: t("空闲", "Idle"),
                         value: idleLabel,
-                        tint: snapshot.isIdleLongEnough ? .green : .blue
+                        tint: snapshot.isIdleLongEnough ? .green : DesignToken.stone
                     )
                     CompactMetricPill(
                         title: t("防休眠", "Wake Lock"),
@@ -154,7 +170,7 @@ struct ContentView: View {
                         CompactMetricPill(
                             title: t("电量", "Battery"),
                             value: "\(batteryLevel)%",
-                            tint: batteryLevel >= 50 ? .blue : .orange
+                            tint: batteryLevel >= 50 ? DesignToken.stone : .orange
                         )
                     }
                 }
@@ -164,11 +180,11 @@ struct ContentView: View {
 
     private var footerSection: some View {
         HStack(spacing: 18) {
-            Text(t("版本 v0.1.1", "Version v0.1.1"))
+            Text(t("版本 v1.1.0", "Version v1.1.0"))
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                 .foregroundStyle(.secondary)
 
-            Link(destination: URL(string: "https://github.com/bigbigtooth/ClawWaker")!) {
+            Link(destination: URL(string: "https://github.com/bigbigtooth/AgentWaker")!) {
                 Label("GitHub", systemImage: "link")
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
             }
@@ -185,7 +201,7 @@ struct ContentView: View {
                 value: snapshot.isDisplayActive ? t("亮起", "Awake") : t("已关闭", "Dark"),
                 detail: snapshot.isDisplayActive ? t("自动启动暂不触发", "Automatic start is paused for now") : t("满足自动启动关键条件", "A key automatic-start condition is satisfied"),
                 systemImage: snapshot.isDisplayActive ? "display" : "moon.stars.fill",
-                tint: snapshot.isDisplayActive ? .blue : .green
+                tint: snapshot.isDisplayActive ? DesignToken.stone : .green
             )
 
             OverviewStatCard(
@@ -199,7 +215,7 @@ struct ContentView: View {
             OverviewStatCard(
                 title: t("运行进程", "Processes"),
                 value: "\(appModel.serviceController.runningProcesses.count)",
-                detail: appModel.serviceController.runningProcesses.isEmpty ? t("当前没有检测到 OpenClaw 进程", "No OpenClaw process is currently detected") : t("已发现活跃的 OpenClaw 进程", "An active OpenClaw process has been detected"),
+                detail: appModel.serviceController.runningProcesses.isEmpty ? t("当前没有检测到 \(serviceName.zh) 进程", "No \(serviceName.en) process is currently detected") : t("已发现活跃的 \(serviceName.zh) 进程", "An active \(serviceName.en) process has been detected"),
                 systemImage: "terminal.fill",
                 tint: appModel.serviceController.isRunning ? .green : .secondary
             )
@@ -235,7 +251,7 @@ struct ContentView: View {
                             title: t("电池", "Battery"),
                             value: "\(batteryLevel)%",
                             systemImage: batterySymbol(for: batteryLevel),
-                            tint: batteryLevel >= 50 ? .blue : .orange
+                            tint: batteryLevel >= 50 ? DesignToken.stone : .orange
                         )
                     }
                     Spacer()
@@ -247,7 +263,7 @@ struct ContentView: View {
                         value: snapshot.isDisplayActive ? t("亮起", "Awake") : t("关闭", "Dark"),
                         detail: snapshot.isDisplayActive ? t("显示器仍处于点亮状态", "The display is still on") : t("屏幕已经关闭，可触发自动化条件", "The display is dark, so automation can trigger"),
                         systemImage: snapshot.isDisplayActive ? "display" : "display.slash",
-                        tint: snapshot.isDisplayActive ? .blue : .green
+                        tint: snapshot.isDisplayActive ? DesignToken.stone : .green
                     )
                     SystemSignalTile(
                         title: t("电源", "Power"),
@@ -268,7 +284,7 @@ struct ContentView: View {
                         value: idleLabel,
                         detail: snapshot.isIdleLongEnough ? t("已超过 60 秒阈值", "The 60-second threshold has been met") : t("尚未达到自动启动的空闲阈值", "The automatic-start idle threshold has not been met"),
                         systemImage: snapshot.isIdleLongEnough ? "timer.circle.fill" : "timer",
-                        tint: snapshot.isIdleLongEnough ? .green : .blue
+                        tint: snapshot.isIdleLongEnough ? .green : DesignToken.stone
                     )
                     SystemSignalTile(
                         title: t("合盖", "Lid"),
@@ -337,7 +353,7 @@ struct ContentView: View {
                 SectionHeader(
                     eyebrow: t("防休眠控制", "WAKE CONTROL"),
                     title: t("防休眠状态", "Wake Assertion Status"),
-                    description: text(appModel.wakeController.detail)
+                    description: text(appModel.wakeLimitationNote)
                 )
 
                 StatusChip(
@@ -366,19 +382,19 @@ struct ContentView: View {
 
     private var heroTitle: String {
         if appModel.serviceController.isLaunching {
-            return t("正在启动 OpenClaw…", "Starting OpenClaw…")
+            return t("正在启动 \(serviceName.zh)…", "Starting \(serviceName.en)…")
         }
         if appModel.serviceController.isRunning {
-            return t("OpenClaw 正在稳定运行", "OpenClaw is running normally")
+            return t("\(serviceName.zh) 正在稳定运行", "\(serviceName.en) is running normally")
         }
         if appModel.automationEligible {
             return t("系统已满足自动启动条件", "Automatic start conditions are satisfied")
         }
-        return t("随时查看 OpenClaw 唤醒状态", "Monitor OpenClaw wake status at a glance")
+        return t("随时查看 \(serviceName.zh) 唤醒状态", "Monitor \(serviceName.en) wake status at a glance")
     }
 
     private var primaryActionTitle: String {
-        appModel.serviceController.isRunning ? t("停止 OpenClaw", "Stop OpenClaw") : t("启动 OpenClaw", "Start OpenClaw")
+        appModel.serviceController.isRunning ? t("停止 \(serviceName.zh)", "Stop \(serviceName.en)") : t("启动 \(serviceName.zh)", "Start \(serviceName.en)")
     }
 
     private var primaryActionSymbol: String {
@@ -390,7 +406,7 @@ struct ContentView: View {
     }
 
     private var primaryActionTint: Color {
-        appModel.serviceController.isRunning ? .red : .green
+        appModel.serviceController.isRunning ? DesignToken.cinnabar : DesignToken.runningGreen
     }
 
     private func primaryAction() {
@@ -402,9 +418,15 @@ struct ContentView: View {
     }
 }
 
+// MARK: - Settings View
+
 struct SettingsView: View {
-    @EnvironmentObject private var appModel: ClawWakerAppModel
+    @EnvironmentObject private var appModel: AgentWakerAppModel
     @State private var isShowingSleepGuide = false
+
+    private var serviceName: LocalizedText {
+        appModel.activeServiceName
+    }
 
     private func t(_ zh: String, _ en: String) -> String {
         appModel.localized(zh: zh, en: en)
@@ -421,7 +443,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 14) {
                         Text(t("设置与日志", "Settings & Logs"))
                             .font(.system(size: 30, weight: .bold, design: .rounded))
-                        Text(t("所有可编辑命令配置、最近一次命令输出、诊断提示与睡眠建议都集中在这里，主窗口则保持为纯状态仪表板。", "Command configuration, the latest command output, diagnostics, and sleep guidance all live here so the main window can stay focused on the dashboard."))
+                        Text(t("选择服务预设或自定义命令配置，查看运行日志与诊断信息。", "Choose a service preset or custom command configuration, view runtime logs and diagnostics."))
                             .font(.title3)
                             .foregroundStyle(.secondary)
                     }
@@ -449,14 +471,58 @@ struct SettingsView: View {
         SurfaceCard {
             VStack(alignment: .leading, spacing: 20) {
                 SectionHeader(
-                    eyebrow: t("命令配置", "COMMAND CONFIGURATION"),
-                    title: t("启动与停止命令", "Start & Stop Commands"),
-                    description: t("在这里维护 OpenClaw 的启动方式与停止策略。保存后会立即刷新检测状态。", "Configure how OpenClaw starts and stops here. Saving immediately refreshes the detected state.")
+                    eyebrow: t("服务配置", "SERVICE CONFIGURATION"),
+                    title: t("服务预设与启动命令", "Service Preset & Start Commands"),
+                    description: t("选择 OpenClaw、Hermes 或自定义服务。预设会自动配置启动与停止命令。", "Choose OpenClaw, Hermes, or a custom service. Presets automatically configure start and stop commands.")
                 )
 
                 VStack(alignment: .leading, spacing: 16) {
-                    SettingField(title: t("启动命令", "Start Command"), prompt: t("可执行文件路径或命令名", "Executable path or command name"), text: $appModel.configuration.executable)
-                    SettingField(title: t("启动参数", "Start Arguments"), prompt: t("启动参数（可选）", "Start arguments (optional)"), text: $appModel.configuration.arguments)
+                    Text(t("服务预设", "Service Preset"))
+                        .font(.title3.weight(.semibold))
+
+                    Picker(t("预设类型", "Preset Type"), selection: $appModel.configuration.preset) {
+                        ForEach(ServicePreset.allCases) { preset in
+                            Text(text(preset.displayName)).tag(preset)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+
+                    if appModel.configuration.preset == .custom {
+                        Text(t("自定义模式下，你需要手动填写启动和停止命令。", "In custom mode, you need to fill in start and stop commands manually."))
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        HStack(spacing: 8) {
+                            Image(systemName: "lock.fill")
+                                .font(.caption)
+                                .foregroundStyle(DesignToken.stone)
+                            Text(t("预设已自动配置启动与停止命令", "Preset has automatically configured start and stop commands"))
+                                .font(.callout)
+                                .foregroundStyle(DesignToken.stone)
+                        }
+                        .padding(10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(DesignToken.stone.opacity(0.08))
+                        )
+                    }
+                }
+
+                Divider()
+
+                VStack(alignment: .leading, spacing: 16) {
+                    SettingField(
+                        title: t("启动命令", "Start Command"),
+                        prompt: t("可执行文件路径或命令名", "Executable path or command name"),
+                        text: $appModel.configuration.executable,
+                        isDisabled: appModel.configuration.isPresetLocked
+                    )
+                    SettingField(
+                        title: t("启动参数", "Start Arguments"),
+                        prompt: t("启动参数（可选）", "Start arguments (optional)"),
+                        text: $appModel.configuration.arguments,
+                        isDisabled: appModel.configuration.isPresetLocked
+                    )
                 }
 
                 Divider()
@@ -476,13 +542,13 @@ struct SettingsView: View {
                         title: t("停止命令", "Stop Command"),
                         prompt: t("停止命令路径或命令名（可选）", "Stop command path or name (optional)"),
                         text: $appModel.configuration.stopExecutable,
-                        isDisabled: appModel.configuration.stopMode == .kill
+                        isDisabled: appModel.configuration.stopMode == .kill || appModel.configuration.isPresetLocked
                     )
                     SettingField(
                         title: t("停止参数", "Stop Arguments"),
                         prompt: t("停止参数（可选）", "Stop arguments (optional)"),
                         text: $appModel.configuration.stopArguments,
-                        isDisabled: appModel.configuration.stopMode == .kill
+                        isDisabled: appModel.configuration.stopMode == .kill || appModel.configuration.isPresetLocked
                     )
                 }
 
@@ -508,8 +574,8 @@ struct SettingsView: View {
 
                 InfoCallout(
                     title: t("停止方式说明", "Stop Method Notes"),
-                    message: t("可以选择执行停止命令，或者直接结束检测到的 OpenClaw 进程。如果启动命令执行后没有产生进程，下方日志会保留 stdout / stderr 便于排查。", "You can either run a stop command or directly terminate the detected OpenClaw process. If the start command finishes without spawning a process, stdout/stderr is kept below for troubleshooting."),
-                    tint: .blue
+                    message: t("可以选择执行停止命令，或者直接结束检测到的服务进程。如果启动命令执行后没有产生进程，下方日志会保留 stdout / stderr 便于排查。", "You can either run a stop command or directly terminate the detected service process. If the start command finishes without spawning a process, stdout/stderr is kept below for troubleshooting."),
+                    tint: DesignToken.stone
                 )
             }
         }
@@ -525,7 +591,7 @@ struct SettingsView: View {
                 )
 
                 if appModel.serviceController.runningProcesses.isEmpty {
-                    EmptyStateRow(title: t("暂无运行中的进程", "No Running Processes"), message: t("当 OpenClaw 启动成功后，会在这里显示 PID 与命令行。", "When OpenClaw starts successfully, its PID and command line will appear here."))
+                    EmptyStateRow(title: t("暂无运行中的进程", "No Running Processes"), message: t("当 \(serviceName.zh) 启动成功后，会在这里显示 PID 与命令行。", "When \(serviceName.en) starts successfully, its PID and command line will appear here."))
                 } else {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(t("运行中的进程", "Running Processes"))
@@ -571,7 +637,7 @@ struct SettingsView: View {
                         }
                     }
                 } else {
-                    EmptyStateRow(title: t("还没有命令记录", "No Command History Yet"), message: t("执行启动或停止后，这里会保存最近一次命令的摘要与输出。", "After you start or stop OpenClaw, the latest command summary and output will be kept here."))
+                    EmptyStateRow(title: t("还没有命令记录", "No Command History Yet"), message: t("执行启动或停止后，这里会保存最近一次命令的摘要与输出。", "After you start or stop the service, the latest command summary and output will be kept here."))
                 }
             }
         }
@@ -618,7 +684,7 @@ struct SettingsView: View {
                     SectionHeader(
                         eyebrow: t("运行日志", "RUNTIME LOGS"),
                         title: t("运行调试日志", "Runtime Debug Log"),
-                        description: t("自动启动判断、系统状态变化和 OpenClaw 启停过程都会记录在这里，便于排查自动化问题。日志也会持久化到：\(appModel.runtimeLogStore.logFilePath)", "Automatic-start evaluations, system state changes, and OpenClaw start/stop activity are recorded here for troubleshooting. Logs are also persisted to: \(appModel.runtimeLogStore.logFilePath)")
+                        description: t("自动启动判断、系统状态变化和服务启停过程都会记录在这里，便于排查自动化问题。日志也会持久化到：\(appModel.runtimeLogStore.logFilePath)", "Automatic-start evaluations, system state changes, and service start/stop activity are recorded here for troubleshooting. Logs are also persisted to: \(appModel.runtimeLogStore.logFilePath)")
                     )
                     Spacer(minLength: 12)
                     Button(t("清空日志", "Clear Logs")) {
@@ -628,7 +694,7 @@ struct SettingsView: View {
                 }
 
                 if appModel.runtimeLogStore.entries.isEmpty {
-                    EmptyStateRow(title: t("暂无调试日志", "No Runtime Logs Yet"), message: t("当系统状态变化、自动策略触发或 OpenClaw 启停时，这里会追加日志。", "Logs appear here when system state changes, automation triggers, or OpenClaw starts and stops."))
+                    EmptyStateRow(title: t("暂无调试日志", "No Runtime Logs Yet"), message: t("当系统状态变化、自动策略触发或服务启停时，这里会追加日志。", "Logs appear here when system state changes, automation triggers, or the service starts and stops."))
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 10) {
@@ -676,6 +742,8 @@ struct SettingsView: View {
     }
 }
 
+// MARK: - Reusable Components
+
 private struct SurfaceCard<Content: View>: View {
     var padding: CGFloat = 24
     @ViewBuilder var content: Content
@@ -686,10 +754,10 @@ private struct SurfaceCard<Content: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(Color(nsColor: .controlBackgroundColor).opacity(0.92))
+                    .fill(DesignToken.cardBackground)
                     .overlay(
                         RoundedRectangle(cornerRadius: 28, style: .continuous)
-                            .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
+                            .strokeBorder(DesignToken.cardBorder, lineWidth: 1)
                     )
             )
             .shadow(color: Color.black.opacity(0.06), radius: 18, x: 0, y: 8)
@@ -765,7 +833,7 @@ private struct SectionHeader: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(eyebrow)
                 .font(.system(size: 12, weight: .bold, design: .rounded))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DesignToken.stone)
                 .tracking(1.4)
             Text(title)
                 .font(.system(size: 24, weight: .bold, design: .rounded))
@@ -796,37 +864,6 @@ private struct StatusChip: View {
         .padding(.vertical, 8)
         .background(tint.opacity(0.12), in: Capsule())
         .foregroundStyle(tint)
-    }
-}
-
-private struct HeroHighlightView: View {
-    let title: String
-    let subtitle: String
-    let systemImage: String
-    let tint: Color
-
-    var body: some View {
-        HStack(spacing: 16) {
-            ZStack {
-                Circle()
-                    .fill(tint.opacity(0.14))
-                    .frame(width: 72, height: 72)
-                Image(systemName: systemImage)
-                    .font(.system(size: 30, weight: .semibold))
-                    .foregroundStyle(tint)
-            }
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text(title)
-                    .font(.title3.weight(.semibold))
-                Text(subtitle)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(nsColor: .windowBackgroundColor).opacity(0.55), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 }
 
@@ -978,18 +1015,6 @@ private struct EmptyStateRow: View {
     }
 }
 
-private struct DetailTag: View {
-    let text: String
-
-    var body: some View {
-        Text(text)
-            .font(.caption.weight(.semibold))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color(nsColor: .windowBackgroundColor).opacity(0.7), in: Capsule())
-    }
-}
-
 private struct SettingField: View {
     let title: String
     let prompt: String
@@ -1060,7 +1085,7 @@ private struct CommandOutputSection: View {
 
 private struct SleepGuidanceView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var appModel: ClawWakerAppModel
+    @EnvironmentObject private var appModel: AgentWakerAppModel
 
     private func t(_ zh: String, _ en: String) -> String {
         appModel.localized(zh: zh, en: en)
@@ -1071,20 +1096,20 @@ private struct SleepGuidanceView: View {
             Text(t("关闭关屏休眠设置指引", "Display Sleep Guidance"))
                 .font(.system(size: 28, weight: .bold, design: .rounded))
 
-            Text(t("为了让 ClawWaker 在屏幕熄灭后尽量保持 OpenClaw 可达，请按下面步骤检查 macOS 设置：", "To help ClawWaker keep OpenClaw reachable after the display turns off, review these macOS settings:"))
+            Text(t("为了让空动在屏幕熄灭后尽量保持服务可达，请按下面步骤检查 macOS 设置：", "To help AgentWaker keep the service reachable after the display turns off, review these macOS settings:"))
                 .font(.title3)
                 .foregroundStyle(.secondary)
 
             VStack(alignment: .leading, spacing: 12) {
-                GuideRow(index: 1, text: t("打开“系统设置” → “锁定屏幕”，把“接入电源适配器且显示器关闭时，关闭显示器”设置成更长时间。", "Open System Settings → Lock Screen, then make the display-off timer longer while power is connected."))
-                GuideRow(index: 2, text: t("打开“系统设置” → “电池”，在“选项”里开启“接入电源时防止自动进入睡眠”（不同 macOS 文案可能略有差异）。", "Open System Settings → Battery, then enable the option that prevents automatic sleep while on power (wording varies by macOS version)."))
+                GuideRow(index: 1, text: t("打开「系统设置」→「锁定屏幕」，把「接入电源适配器且显示器关闭时，关闭显示器」设置成更长时间。", "Open System Settings → Lock Screen, then make the display-off timer longer while power is connected."))
+                GuideRow(index: 2, text: t("打开「系统设置」→「电池」，在「选项」里开启「接入电源时防止自动进入睡眠」（不同 macOS 文案可能略有差异）。", "Open System Settings → Battery, then enable the option that prevents automatic sleep while on power (wording varies by macOS version)."))
                 GuideRow(index: 3, text: t("如果你使用合盖场景，请外接电源、显示器、键盘和鼠标；macOS 对合盖休眠有硬件级限制，软件无法完全绕过。", "If you work with the lid closed, connect power, an external display, a keyboard, and a mouse. macOS still enforces hardware-level limits around lid-closed sleep."))
                 GuideRow(index: 4, text: t("也可以在终端手动验证：运行 caffeinate -dimsu，观察网络任务是否仍保持在线。", "You can also verify behavior manually in Terminal by running caffeinate -dimsu and confirming your network task stays reachable."))
             }
 
             InfoCallout(
                 title: t("提示", "Tip"),
-                message: t("ClawWaker 能阻止空闲休眠，但不能保证所有机型在合盖后依然持续联网。", "ClawWaker can prevent idle sleep, but it cannot guarantee continuous network availability on every Mac after the lid is closed."),
+                message: t("空动能阻止空闲休眠，但不能保证所有机型在合盖后依然持续联网。", "AgentWaker can prevent idle sleep, but it cannot guarantee continuous network availability on every Mac after the lid is closed."),
                 tint: .orange
             )
 
@@ -1111,7 +1136,7 @@ private struct GuideRow: View {
             Text("\(index)")
                 .font(.headline)
                 .frame(width: 24, height: 24)
-                .background(Color.accentColor.opacity(0.12), in: Circle())
+                .background(DesignToken.stone.opacity(0.12), in: Circle())
             Text(text)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -1162,5 +1187,5 @@ private func batterySymbol(for level: Int) -> String {
 
 #Preview {
     ContentView()
-        .environmentObject(ClawWakerAppModel())
+        .environmentObject(AgentWakerAppModel())
 }
