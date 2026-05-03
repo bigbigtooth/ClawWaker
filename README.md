@@ -8,7 +8,7 @@
 
 [![macOS](https://img.shields.io/badge/platform-macOS-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/bigbigtooth/AgentWaker)
 [![Version](https://img.shields.io/badge/version-1.2.0-blue?style=flat-square)](https://github.com/bigbigtooth/AgentWaker)
-[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/license-AGPL--v3-blue?style=flat-square)](LICENSE)
 
 [English](./README_EN.md) · **简体中文**
 
